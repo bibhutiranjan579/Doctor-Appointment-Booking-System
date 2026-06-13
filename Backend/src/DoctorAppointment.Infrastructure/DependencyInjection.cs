@@ -14,14 +14,28 @@ namespace DoctorAppointment.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            // Database - use PostgreSQL if connection string contains "Host=", otherwise SQL Server
+            // Database - use PostgreSQL if connection string contains "Host=" or starts with postgres://, otherwise SQL Server
             var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                if (connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase))
-                    options.UseNpgsql(connectionString);
+                if (connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase) ||
+                    connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+                    connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+                {
+                    var connStr = connectionString;
+                    if (connStr.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+                        connStr.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var uri = new Uri(connStr);
+                        var userInfo = uri.UserInfo.Split(':');
+                        connStr = $"Host={uri.Host};Port={(uri.Port > 0 ? uri.Port : 5432)};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+                    }
+                    options.UseNpgsql(connStr);
+                }
                 else
+                {
                     options.UseSqlServer(connectionString);
+                }
             });
 
             // Repositories
