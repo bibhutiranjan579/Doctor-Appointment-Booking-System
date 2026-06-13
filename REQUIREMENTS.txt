@@ -1,0 +1,113 @@
+==============================================================
+  DOCTOR APPOINTMENT SYSTEM - REQUIREMENTS & SETUP GUIDE
+==============================================================
+
+=============== PREREQUISITES (Install these first) ===============
+
+1. .NET 10 SDK
+   Download: https://dotnet.microsoft.com/download/dotnet/10.0
+   Verify:   dotnet --version  (should show 10.x.x)
+
+2. Node.js (v20 or later)
+   Download: https://nodejs.org/
+   Verify:   node --version  (should show v20.x.x or later)
+
+3. npm (comes with Node.js)
+   Verify:   npm --version
+
+4. Angular CLI (v21)
+   Install:  npm install -g @angular/cli
+   Verify:   ng version
+
+5. SQL Server LocalDB (for local development)
+   Included with Visual Studio, or install separately:
+   Download: https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb
+
+6. Git (optional, for version control)
+   Download: https://git-scm.com/downloads
+
+=============== BACKEND DEPENDENCIES (.NET NuGet Packages) ===============
+
+These are auto-installed by 'dotnet restore'. Listed for reference:
+
+API Project:
+  - Microsoft.AspNetCore.Authentication.JwtBearer  10.0.6
+  - Microsoft.EntityFrameworkCore.Design           10.0.6
+  - FluentValidation.AspNetCore                    11.3.1
+  - Serilog.AspNetCore                             10.0.0
+  - Swashbuckle.AspNetCore                         6.9.0
+
+Infrastructure Project:
+  - Microsoft.EntityFrameworkCore.SqlServer         10.0.6
+  - Npgsql.EntityFrameworkCore.PostgreSQL           10.0.2
+  - Microsoft.EntityFrameworkCore.Tools             10.0.6
+  - Microsoft.Extensions.Http                       10.0.9
+
+Application Project:
+  - AutoMapper                                      12.0.1
+  - BCrypt.Net-Next                                 4.0.3
+  - FluentValidation                                11.11.0
+
+=============== FRONTEND DEPENDENCIES (npm packages) ===============
+
+These are auto-installed by 'npm install'. Key packages:
+
+  - @angular/core                     ^21.2.7
+  - @angular/material                 ^21.2.6
+  - @angular/animations               ^21.2.7
+  - @microsoft/signalr                ^8.0.7
+  - marked                            ^15.0.7
+  - chart.js                          ^4.4.9
+
+=============== QUICK SETUP (after extracting zip) ===============
+
+Step 1: Restore Backend
+  cd Backend
+  dotnet restore
+
+Step 2: Install Frontend
+  cd Frontend/doctor-appointment
+  npm install
+
+Step 3: Setup Database (first time only)
+  cd Backend/src/DoctorAppointment.API
+  dotnet ef database update
+
+Step 4: Set Gemini API Key (optional, for AI chat)
+  cd Backend/src/DoctorAppointment.API
+  dotnet user-secrets set "GeminiSettings:ApiKey" "YOUR_GEMINI_API_KEY"
+
+=============== RUNNING THE APPLICATION ===============
+
+Terminal 1 - Start Backend:
+  cd Backend/src/DoctorAppointment.API
+  dotnet run
+  (Runs on http://localhost:5229)
+
+Terminal 2 - Start Frontend:
+  cd Frontend/doctor-appointment
+  ng serve
+  (Runs on http://localhost:4200)
+
+Open browser: http://localhost:4200
+
+=============== DEPLOYMENT REQUIREMENTS ===============
+
+For Render (Backend):
+  - Docker support (Dockerfile included in Backend/)
+  - PostgreSQL database (free tier available)
+  - Environment variables: ConnectionStrings__DefaultConnection,
+    JwtSettings__Secret, GeminiSettings__ApiKey, CorsOrigins__0
+
+For Vercel (Frontend):
+  - Root Directory: Frontend/doctor-appointment
+  - Build Command: npm run build -- --configuration production
+  - Output Directory: dist/doctor-appointment/browser
+  - vercel.json is already configured
+
+=============== DEFAULT ACCOUNTS (after fresh setup) ===============
+
+No default accounts. Register new users at /auth/register
+Roles available: Patient, Doctor, Admin
+
+==============================================================

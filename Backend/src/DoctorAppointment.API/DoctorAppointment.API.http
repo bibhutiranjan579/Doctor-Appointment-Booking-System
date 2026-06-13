@@ -1,0 +1,33 @@
+@DoctorAppointment.API_HostAddress = http://localhost:5229
+
+### ==================== CHATBOT TESTS ====================
+
+### Test 1: Guest Chat (No Auth Required) - Test Basic Symptom
+POST {{DoctorAppointment.API_HostAddress}}/api/medai/chat
+Content-Type: application/json
+
+{
+  "message": "I have a headache and mild fever for 2 days. What should I do?"
+}
+
+###
+
+### Test 2: Guest Chat - Emergency Test
+POST {{DoctorAppointment.API_HostAddress}}/api/medai/chat
+Content-Type: application/json
+
+{
+  "message": "I'm having chest pain and difficulty breathing"
+}
+
+###
+
+### Test 3: Guest Chat - General Health Question
+POST {{DoctorAppointment.API_HostAddress}}/api/medai/chat
+Content-Type: application/json
+
+{
+  "message": "What are good habits for maintaining a healthy lifestyle?"
+}
+
+###

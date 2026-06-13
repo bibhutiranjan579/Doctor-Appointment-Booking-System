@@ -1,0 +1,53 @@
+@use '@angular/material' as mat;
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+  background: #f0f2f5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@include mat.theme((
+  color: (
+    primary: mat.$violet-palette,
+    tertiary: mat.$green-palette,
+  ),
+  typography: Roboto,
+  density: 0,
+));
+
+// Global scrollbar styling
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+// Global link styling
+a {
+  text-decoration: none;
+}
+
+// Toast/Snackbar styling
+.mat-mdc-snack-bar-container {
+  border-radius: 8px !important;
+}
+
+// Global button transitions
+.mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-icon-button, .mat-mdc-fab {
+  transition: all 0.2s ease !important;
+}

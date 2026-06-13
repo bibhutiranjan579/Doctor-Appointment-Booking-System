@@ -1,0 +1,24 @@
+# Backend
+Backend/**/bin/
+Backend/**/obj/
+Backend/**/.vs/
+Backend/**/Logs/
+Backend/**/*.user
+Backend/**/*.suo
+Backend/**/appsettings.Development.json
+
+# Frontend
+Frontend/doctor-appointment/node_modules/
+Frontend/doctor-appointment/dist/
+Frontend/doctor-appointment/.angular/
+Frontend/doctor-appointment/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store

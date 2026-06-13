@@ -1,0 +1,289 @@
+<!-- Floating Action Button (Minimized) -->
+@if (mode === 'minimized') {
+  <button class="medai-fab" (click)="openChat()" matTooltip="MedAI Assistant">
+    <div class="medai-fab__icon">
+      <mat-icon>health_and_safety</mat-icon>
+    </div>
+    <span class="medai-fab__label">MedAI</span>
+    @if (unreadCount > 0) {
+      <span class="medai-fab__badge">{{ unreadCount }}</span>
+    }
+  </button>
+}
+
+<!-- Expanded Chat Window -->
+@if (mode === 'expanded') {
+  <div class="medai-window" [class.medai-window--closing]="isClosing">
+    <!-- Header -->
+    <div class="medai-header">
+      <div class="medai-header__left">
+        <div class="medai-header__avatar">
+          <mat-icon>health_and_safety</mat-icon>
+        </div>
+        <div class="medai-header__info">
+          <h4>MedAI</h4>
+          <span class="medai-header__status"><span class="status-dot"></span> Online</span>
+        </div>
+      </div>
+      <div class="medai-header__actions">
+        <button mat-icon-button (click)="goFullscreen()" matTooltip="Full Screen">
+          <mat-icon>fullscreen</mat-icon>
+        </button>
+        <button mat-icon-button (click)="clearChat()" matTooltip="Clear Chat">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+        <button mat-icon-button (click)="closeChat()" matTooltip="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="medai-messages" #messagesContainer (scroll)="onMessagesScroll()">
+      @for (msg of messages; track msg.id) {
+        <div class="medai-msg" [class.medai-msg--user]="msg.role === 'user'" [class.medai-msg--bot]="msg.role === 'assistant'" [class.medai-msg--emergency]="msg.isEmergency">
+          @if (msg.role === 'assistant') {
+            <div class="medai-msg__avatar">
+              <mat-icon>{{ msg.isEmergency ? 'warning' : 'health_and_safety' }}</mat-icon>
+            </div>
+          }
+          <div class="medai-msg__bubble">
+            @if (msg.isLoading) {
+              <div class="typing-indicator">
+                <span></span><span></span><span></span>
+              </div>
+            } @else {
+              <div class="medai-msg__content" [innerHTML]="formatMessage(msg.content)"></div>
+              <div class="medai-msg__footer">
+                <span class="medai-msg__time">{{ formatTime(msg.timestamp) }}</span>
+                @if (msg.role === 'assistant') {
+                  <button class="copy-btn" (click)="copyMessage(msg.content)" matTooltip="Copy">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- New Messages Indicator -->
+    @if (showNewMsgBtn) {
+      <button class="new-msg-btn" (click)="scrollToLatest()">
+        <mat-icon>keyboard_arrow_down</mat-icon> New Messages
+      </button>
+    }
+
+    <!-- Quick Actions -->
+    @if (messages.length <= 1) {
+      <div class="medai-quickactions">
+        @for (action of quickActions; track action.label) {
+          <button class="quick-chip" (click)="sendQuickAction(action)">
+            <mat-icon>{{ action.icon }}</mat-icon>
+            {{ action.label }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Input -->
+    <div class="medai-input">
+      <textarea
+        #inputArea
+        class="medai-input__field"
+        [(ngModel)]="inputText"
+        (keydown)="onKeyDown($event)"
+        placeholder="Ask MedAI about symptoms, health tips..."
+        rows="1"
+        maxlength="2000"
+      ></textarea>
+      <button class="medai-input__send" [disabled]="!inputText.trim() || isTyping" (click)="sendMessage()">
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+
+    <div class="medai-disclaimer">
+      <mat-icon>info</mat-icon>
+      <span>MedAI provides general info only, not medical diagnoses.</span>
+    </div>
+  </div>
+}
+
+<!-- Full Screen Mode -->
+@if (mode === 'fullscreen') {
+  <div class="medai-fullscreen">
+    <!-- Sidebar (only for logged-in users) -->
+    @if (isLoggedIn && showSidebar) {
+      <aside class="medai-sidebar">
+        <div class="medai-sidebar__header">
+          <h3>Chat History</h3>
+          <button mat-icon-button (click)="toggleSidebar()" matTooltip="Close Sidebar">
+            <mat-icon>menu_open</mat-icon>
+          </button>
+        </div>
+        <button class="new-chat-btn" (click)="newConversation()">
+          <mat-icon>add</mat-icon> New Chat
+        </button>
+
+        <div class="medai-sidebar__list">
+          @if (loadingConversations) {
+            <div class="sidebar-loading">
+              <div class="skeleton"></div>
+              <div class="skeleton"></div>
+              <div class="skeleton"></div>
+            </div>
+          }
+          @for (group of groupedConversations; track group.label) {
+            <div class="conv-group">
+              <span class="conv-group__label">{{ group.label }}</span>
+              @for (conv of group.items; track conv.id) {
+                <div class="conv-item" [class.conv-item--active]="conv.id === activeConversationId" (click)="selectConversation(conv)">
+                  @if (renamingId === conv.id) {
+                    <input class="rename-input" [(ngModel)]="renameText" (keydown.enter)="confirmRename(conv)" (keydown.escape)="cancelRename()" (blur)="cancelRename()" autofocus />
+                  } @else {
+                    <span class="conv-item__title">{{ conv.title }}</span>
+                    <div class="conv-item__actions">
+                      <button mat-icon-button (click)="startRename(conv, $event)" matTooltip="Rename">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button (click)="confirmDelete(conv.id, $event)" matTooltip="Delete">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+          @if (!loadingConversations && conversations.length === 0) {
+            <div class="sidebar-empty">
+              <mat-icon>chat_bubble_outline</mat-icon>
+              <p>No conversations yet</p>
+            </div>
+          }
+        </div>
+      </aside>
+    }
+
+    <!-- Main Chat Area -->
+    <main class="medai-main" [class.medai-main--full]="!isLoggedIn || !showSidebar">
+      <!-- Full-screen Header -->
+      <div class="medai-header medai-header--fullscreen">
+        <div class="medai-header__left">
+          @if (isLoggedIn && !showSidebar) {
+            <button mat-icon-button (click)="toggleSidebar()" matTooltip="Open Sidebar">
+              <mat-icon>menu</mat-icon>
+            </button>
+          }
+          <div class="medai-header__avatar">
+            <mat-icon>health_and_safety</mat-icon>
+          </div>
+          <div class="medai-header__info">
+            <h4>MedAI Healthcare Assistant</h4>
+            <span class="medai-header__status"><span class="status-dot"></span> Online</span>
+          </div>
+        </div>
+        <div class="medai-header__actions">
+          @if (isLoggedIn) {
+            <button mat-icon-button (click)="newConversation()" matTooltip="New Chat">
+              <mat-icon>add_comment</mat-icon>
+            </button>
+          }
+          <button mat-icon-button (click)="clearChat()" matTooltip="Clear Chat">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+          <button mat-icon-button (click)="exitFullscreen()" matTooltip="Exit Full Screen">
+            <mat-icon>fullscreen_exit</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div class="medai-messages medai-messages--fullscreen" #messagesContainer (scroll)="onMessagesScroll()">
+        @for (msg of messages; track msg.id) {
+          <div class="medai-msg" [class.medai-msg--user]="msg.role === 'user'" [class.medai-msg--bot]="msg.role === 'assistant'" [class.medai-msg--emergency]="msg.isEmergency">
+            @if (msg.role === 'assistant') {
+              <div class="medai-msg__avatar medai-msg__avatar--lg">
+                <mat-icon>{{ msg.isEmergency ? 'warning' : 'health_and_safety' }}</mat-icon>
+              </div>
+            }
+            <div class="medai-msg__bubble medai-msg__bubble--fullscreen">
+              @if (msg.isLoading) {
+                <div class="typing-indicator">
+                  <span></span><span></span><span></span>
+                </div>
+              } @else {
+                <div class="medai-msg__sender">{{ msg.role === 'user' ? 'You' : 'MedAI' }}</div>
+                <div class="medai-msg__content" [innerHTML]="formatMessage(msg.content)"></div>
+                <div class="medai-msg__footer">
+                  <span class="medai-msg__time">{{ formatTime(msg.timestamp) }}</span>
+                  @if (msg.role === 'assistant') {
+                    <button class="copy-btn" (click)="copyMessage(msg.content)" matTooltip="Copy">
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- New Messages Indicator -->
+      @if (showNewMsgBtn) {
+        <button class="new-msg-btn new-msg-btn--fullscreen" (click)="scrollToLatest()">
+          <mat-icon>keyboard_arrow_down</mat-icon> New Messages
+        </button>
+      }
+
+      <!-- Quick Actions (Full Screen) -->
+      @if (messages.length <= 1) {
+        <div class="medai-quickactions medai-quickactions--fullscreen">
+          @for (action of quickActions; track action.label) {
+            <button class="quick-chip quick-chip--lg" (click)="sendQuickAction(action)">
+              <mat-icon>{{ action.icon }}</mat-icon>
+              {{ action.label }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Input Area -->
+      <div class="medai-input medai-input--fullscreen">
+        <textarea
+          #inputArea
+          class="medai-input__field medai-input__field--fullscreen"
+          [(ngModel)]="inputText"
+          (keydown)="onKeyDown($event)"
+          placeholder="Ask MedAI about symptoms, health tips..."
+          rows="1"
+          maxlength="2000"
+        ></textarea>
+        <button class="medai-input__send" [disabled]="!inputText.trim() || isTyping" (click)="sendMessage()">
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+
+      <div class="medai-disclaimer">
+        <mat-icon>info</mat-icon>
+        <span>MedAI provides general health info only, not medical diagnoses. Always consult a healthcare professional.</span>
+      </div>
+    </main>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirm) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <mat-icon class="modal-icon">warning</mat-icon>
+      <h3>Delete Conversation?</h3>
+      <p>Are you sure you want to delete this conversation? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+        <button class="btn-delete" (click)="executeDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+}
