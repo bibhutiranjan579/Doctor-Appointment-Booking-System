@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://YOUR-BACKEND-NAME.onrender.com/api',
-  hubUrl: 'https://YOUR-BACKEND-NAME.onrender.com/hubs'
+  apiUrl: 'https://doctor-appointment-booking-ai.onrender.com/api',
+  hubUrl: 'https://doctor-appointment-booking-ai.onrender.com/hubs'
 };
