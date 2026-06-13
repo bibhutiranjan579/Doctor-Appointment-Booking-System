@@ -212,8 +212,3 @@ Update the connection string in Azure App Service configuration.
 | Frontend | Angular 21.2.7 (Standalone Components) |
 | UI | Angular Material 21.2.6 |
 | Secrets | .NET User Secrets (API keys) |
-
-## Project Info
-
-- **Student**: Bibhuti Ranjan
-- **ID**: EMPN2197
