@@ -146,11 +146,10 @@ import { FooterComponent } from '../../shared/components/footer/footer.component
     .login-wrapper {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
     }
     .login-page {
       display: flex;
-      flex: 1;
+      min-height: 100vh;
       overflow: hidden;
     }
 

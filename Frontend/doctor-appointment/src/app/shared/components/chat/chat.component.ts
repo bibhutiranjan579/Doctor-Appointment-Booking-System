@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -114,7 +115,7 @@ import { FooterComponent } from '../footer/footer.component';
                       </div>
                     </div>
                     <div class="chat-header-actions">
-                      <button mat-icon-button title="Video call"><mat-icon>videocam</mat-icon></button>
+                      <button mat-icon-button title="Video call" (click)="startVideoCall()"><mat-icon>videocam</mat-icon></button>
                       <button mat-icon-button title="Voice call"><mat-icon>call</mat-icon></button>
                       <button mat-icon-button title="More"><mat-icon>more_vert</mat-icon></button>
                     </div>
@@ -188,8 +189,8 @@ import { FooterComponent } from '../footer/footer.component';
     .dashboard-content { padding: 64px 0 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
     /* Chat Container */
-    .chat-container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-    .chat-layout { display: flex; flex: 1; min-height: 0; background: #eae6df; border-radius: 0; overflow: hidden; }
+    .chat-container { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .chat-layout { display: flex; flex: 1; min-height: 0; height: calc(100vh - 64px); background: #eae6df; border-radius: 0; overflow: hidden; }
 
     /* ===== LEFT SIDEBAR ===== */
     .chat-sidebar { width: 380px; background: #fff; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid #e9edef; }
@@ -238,10 +239,10 @@ import { FooterComponent } from '../footer/footer.component';
     .hint-text { font-size: 12px; color: #8696a0; display: block; margin-top: 4px; }
 
     /* ===== RIGHT CHAT PANEL ===== */
-    .chat-main { flex: 1; display: flex; flex-direction: column; background: #efeae2; position: relative; }
+    .chat-main { flex: 1; display: flex; flex-direction: column; background: #efeae2; position: relative; min-height: 0; overflow: hidden; }
     .chat-main::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cdefs%3E%3Cpattern id='p' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23d1cdc7' fill-opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23p)' width='300' height='300'/%3E%3C/svg%3E"); opacity: 0.6; pointer-events: none; z-index: 0; }
 
-    .chat-main__header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #008069; min-height: 56px; z-index: 1; position: relative; }
+    .chat-main__header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #008069; min-height: 56px; z-index: 2; position: sticky; top: 0; flex-shrink: 0; }
     .back-btn { color: #fff; display: none; }
     .chat-user { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; }
     .chat-user-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; position: relative; flex-shrink: 0; }
@@ -253,7 +254,7 @@ import { FooterComponent } from '../footer/footer.component';
     .chat-header-actions button { color: rgba(255,255,255,0.85); }
 
     /* Messages */
-    .messages-area { flex: 1; overflow-y: auto; padding: 20px 60px; z-index: 1; position: relative; }
+    .messages-area { flex: 1; overflow-y: auto; padding: 20px 60px; z-index: 1; position: relative; min-height: 0; }
     .messages-area::-webkit-scrollbar { width: 6px; }
     .messages-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
 
@@ -268,9 +269,9 @@ import { FooterComponent } from '../footer/footer.component';
     .sent .message-bubble { background: #d9fdd3; border-top-right-radius: 0; }
     .received .message-bubble { background: #fff; border-top-left-radius: 0; }
 
-    .message-text { margin: 0; font-size: 14.2px; color: #111b21; line-height: 1.35; word-break: break-word; padding-right: 48px; }
-    .message-meta { display: flex; align-items: center; justify-content: flex-end; gap: 3px; margin-top: -10px; float: right; padding-left: 8px; }
-    .message-time { font-size: 11px; color: #667781; }
+    .message-text { margin: 0; font-size: 14.2px; color: #111b21; line-height: 1.4; word-break: break-word; }
+    .message-meta { display: flex; align-items: center; justify-content: flex-end; gap: 3px; margin-top: 2px; }
+    .message-time { font-size: 11px; color: #667781; white-space: nowrap; }
     .read-tick { font-size: 16px; width: 16px; height: 16px; color: #53bdeb; }
 
     .no-messages { display: flex; align-items: center; justify-content: center; padding: 60px 0; }
@@ -324,7 +325,7 @@ import { FooterComponent } from '../footer/footer.component';
       .chat-user-name { font-size: 14px; }
       .messages-area { padding: 12px 14px; flex: 1; min-height: 0; }
       .message-bubble { max-width: 85%; }
-      .message-text { font-size: 14px; padding-right: 44px; }
+      .message-text { font-size: 14px; }
       .message-input-area { padding: 8px 10px; gap: 8px; position: sticky; bottom: 0; }
       .message-input { padding: 10px 14px; font-size: 15px; border-radius: 20px; }
       .send-btn { width: 40px; height: 40px; }
@@ -365,7 +366,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     private signalrService: SignalrService,
     public authService: AuthService,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {
     const user = this.authService.currentUser;
     this.currentUserId = (user?.userId ?? '').toString().trim().toLowerCase();
@@ -507,5 +509,15 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   private scrollToBottom(): void {
     if (this.messagesContainer) { this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight; }
+  }
+
+  startVideoCall(): void {
+    if (!this.receiverId) return;
+    const role = this.authService.currentUser?.role === 'Doctor' ? 'doctor' : 'patient';
+    // Use a unique room ID based on both user IDs (sorted for consistency)
+    const roomId = [this.currentUserId, this.receiverId].sort().join('-');
+    this.router.navigate([`/${role}/video-call`], {
+      queryParams: { appointmentId: roomId, receiverId: this.receiverId }
+    });
   }
 }

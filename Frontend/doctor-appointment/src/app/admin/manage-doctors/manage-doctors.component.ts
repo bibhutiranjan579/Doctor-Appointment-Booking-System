@@ -9,12 +9,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DoctorService } from '../../core/services/doctor.service';
 import { HospitalService } from '../../core/services/hospital.service';
 import { AuthService } from '../../core/services/auth.service';
+import { LocationService } from '../../core/services/location.service';
 import { Doctor, CreateDoctor, Hospital } from '../../core/models/models';
 
 @Component({
@@ -23,7 +25,7 @@ import { Doctor, CreateDoctor, Hospital } from '../../core/models/models';
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDialogModule, MatCheckboxModule,
-    MatSelectModule, SidebarComponent, TopNavbarComponent, FooterComponent
+    MatSelectModule, MatAutocompleteModule, SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -91,14 +93,26 @@ import { Doctor, CreateDoctor, Hospital } from '../../core/models/models';
                   </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>City</mat-label>
-                  <mat-icon matPrefix>location_city</mat-icon>
-                  <input matInput [(ngModel)]="formData.city" name="city">
-                </mat-form-field>
-                <mat-form-field appearance="outline">
                   <mat-label>State</mat-label>
                   <mat-icon matPrefix>map</mat-icon>
-                  <input matInput [(ngModel)]="formData.state" name="state">
+                  <input matInput [(ngModel)]="formData.state" name="state"
+                    [matAutocomplete]="docStateAuto" (ngModelChange)="onDocStateSearch($event)">
+                  <mat-autocomplete #docStateAuto="matAutocomplete" (optionSelected)="onDocStateSelected($event.option.value)">
+                    @for (s of filteredDocStates; track s) {
+                      <mat-option [value]="s">{{ s }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>City</mat-label>
+                  <mat-icon matPrefix>location_city</mat-icon>
+                  <input matInput [(ngModel)]="formData.city" name="city"
+                    [matAutocomplete]="docCityAuto" (ngModelChange)="onDocCitySearch($event)">
+                  <mat-autocomplete #docCityAuto="matAutocomplete">
+                    @for (c of filteredDocCities; track c) {
+                      <mat-option [value]="c">{{ c }}</mat-option>
+                    }
+                  </mat-autocomplete>
                 </mat-form-field>
               </div>
               <div class="weekday-selector">
@@ -248,6 +262,8 @@ export class ManageDoctorsComponent implements OnInit {
   weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   selectedDays: string[] = [];
   customSpecialization = '';
+  filteredDocStates: string[] = [];
+  filteredDocCities: string[] = [];
 
   specializations: string[] = [
     'General Physician', 'Cardiologist', 'Dermatologist', 'Neurologist',
@@ -257,7 +273,9 @@ export class ManageDoctorsComponent implements OnInit {
     'Nephrologist', 'Rheumatologist', 'Surgeon', 'Radiologist'
   ];
 
-  constructor(public authService: AuthService, private doctorService: DoctorService, private hospitalService: HospitalService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef) {}
+  constructor(public authService: AuthService, private doctorService: DoctorService, private hospitalService: HospitalService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef, private locationService: LocationService) {
+    this.filteredDocStates = this.locationService.getStateNames();
+  }
 
   ngOnInit(): void { this.loadDoctors(); this.loadHospitals(); }
 
@@ -340,5 +358,19 @@ export class ManageDoctorsComponent implements OnInit {
         error: (err) => this.snackBar.open(err.error?.message || 'Error', 'Close', { duration: 3000 })
       });
     }
+  }
+
+  onDocStateSearch(query: string): void {
+    this.filteredDocStates = this.locationService.filterStates(query);
+  }
+
+  onDocStateSelected(state: string): void {
+    this.formData.state = state;
+    this.formData.city = '';
+    this.filteredDocCities = this.locationService.getCities(state);
+  }
+
+  onDocCitySearch(query: string): void {
+    this.filteredDocCities = this.locationService.filterCities(this.formData.state || '', query);
   }
 }

@@ -177,15 +177,14 @@ import { FooterComponent } from '../../shared/components/footer/footer.component
     </div>
   `,
   styles: [`
-    .register-page {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
     .register-wrapper {
       display: flex;
       flex-direction: column;
+    }
+    .register-page {
+      display: flex;
       min-height: 100vh;
+      overflow: hidden;
     }
     .register-left {
       flex: 1;

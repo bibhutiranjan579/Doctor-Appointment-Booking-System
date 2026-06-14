@@ -5,12 +5,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { HospitalService } from '../../core/services/hospital.service';
 import { AuthService } from '../../core/services/auth.service';
+import { LocationService } from '../../core/services/location.service';
 import { Hospital, CreateHospital } from '../../core/models/models';
 
 @Component({
@@ -18,8 +21,8 @@ import { Hospital, CreateHospital } from '../../core/models/models';
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatIconModule,
-    MatFormFieldModule, MatInputModule, MatSnackBarModule,
-    SidebarComponent, TopNavbarComponent, FooterComponent
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule,
+    MatSnackBarModule, SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -42,19 +45,35 @@ import { Hospital, CreateHospital } from '../../core/models/models';
                 <input matInput [(ngModel)]="formData.name" name="name" required>
               </mat-form-field>
               <mat-form-field appearance="outline" class="flex-field">
-                <mat-label>City</mat-label>
-                <mat-icon matPrefix>location_city</mat-icon>
-                <input matInput [(ngModel)]="formData.city" name="city" required>
+                <mat-label>Country</mat-label>
+                <mat-icon matPrefix>public</mat-icon>
+                <mat-select [(ngModel)]="formData.country" name="country" required>
+                  @for (c of locationService.countries; track c) {
+                    <mat-option [value]="c">{{ c }}</mat-option>
+                  }
+                </mat-select>
               </mat-form-field>
               <mat-form-field appearance="outline" class="flex-field">
                 <mat-label>State</mat-label>
                 <mat-icon matPrefix>map</mat-icon>
-                <input matInput [(ngModel)]="formData.state" name="state" required>
+                <input matInput [(ngModel)]="formData.state" name="state" required
+                  [matAutocomplete]="stateAuto" (ngModelChange)="onStateSearch($event)">
+                <mat-autocomplete #stateAuto="matAutocomplete" (optionSelected)="onStateSelected($event.option.value)">
+                  @for (s of filteredStates; track s) {
+                    <mat-option [value]="s">{{ s }}</mat-option>
+                  }
+                </mat-autocomplete>
               </mat-form-field>
               <mat-form-field appearance="outline" class="flex-field">
-                <mat-label>Country</mat-label>
-                <mat-icon matPrefix>public</mat-icon>
-                <input matInput [(ngModel)]="formData.country" name="country" required>
+                <mat-label>City</mat-label>
+                <mat-icon matPrefix>location_city</mat-icon>
+                <input matInput [(ngModel)]="formData.city" name="city" required
+                  [matAutocomplete]="cityAuto" (ngModelChange)="onCitySearch($event)">
+                <mat-autocomplete #cityAuto="matAutocomplete">
+                  @for (c of filteredCities; track c) {
+                    <mat-option [value]="c">{{ c }}</mat-option>
+                  }
+                </mat-autocomplete>
               </mat-form-field>
               <button mat-raised-button class="submit-btn" type="submit">
                 <mat-icon>{{ editing ? 'save' : 'add' }}</mat-icon>
@@ -164,10 +183,14 @@ export class ManageHospitalsComponent implements OnInit {
   ];
 
   hospitals: Hospital[] = [];
-  formData: CreateHospital = { name: '', city: '', state: '', country: '' };
+  formData: CreateHospital = { name: '', city: '', state: '', country: 'India' };
   editing: Hospital | null = null;
+  filteredStates: string[] = [];
+  filteredCities: string[] = [];
 
-  constructor(public authService: AuthService, private hospitalService: HospitalService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef) {}
+  constructor(public authService: AuthService, private hospitalService: HospitalService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef, public locationService: LocationService) {
+    this.filteredStates = this.locationService.getStateNames();
+  }
 
   ngOnInit(): void { this.loadHospitals(); }
 
@@ -186,7 +209,7 @@ export class ManageHospitalsComponent implements OnInit {
       });
     } else {
       this.hospitalService.create(this.formData).subscribe({
-        next: () => { this.loadHospitals(); this.formData = { name: '', city: '', state: '', country: '' }; this.snackBar.open('Hospital added', 'Close', { duration: 2000 }); },
+        next: () => { this.loadHospitals(); this.formData = { name: '', city: '', state: '', country: 'India' }; this.filteredCities = []; this.snackBar.open('Hospital added', 'Close', { duration: 2000 }); },
         error: (err) => this.snackBar.open(err.error?.message || 'Error', 'Close', { duration: 3000 })
       });
     }
@@ -194,12 +217,30 @@ export class ManageHospitalsComponent implements OnInit {
 
   edit(hospital: Hospital): void {
     this.editing = hospital;
-    this.formData = { name: hospital.name, city: hospital.city, state: hospital.state, country: hospital.country };
+    this.formData = { name: hospital.name, city: hospital.city, state: hospital.state, country: hospital.country || 'India' };
+    this.filteredStates = this.locationService.getStateNames();
+    this.filteredCities = this.locationService.getCities(hospital.state);
   }
 
   cancelEdit(): void {
     this.editing = null;
-    this.formData = { name: '', city: '', state: '', country: '' };
+    this.formData = { name: '', city: '', state: '', country: 'India' };
+    this.filteredStates = this.locationService.getStateNames();
+    this.filteredCities = [];
+  }
+
+  onStateSearch(query: string): void {
+    this.filteredStates = this.locationService.filterStates(query);
+  }
+
+  onStateSelected(state: string): void {
+    this.formData.state = state;
+    this.formData.city = '';
+    this.filteredCities = this.locationService.getCities(state);
+  }
+
+  onCitySearch(query: string): void {
+    this.filteredCities = this.locationService.filterCities(this.formData.state, query);
   }
 
   deleteHospital(id: string): void {

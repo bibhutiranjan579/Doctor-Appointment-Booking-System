@@ -53,7 +53,7 @@ import { MatIconModule } from '@angular/material/icon';
       background: linear-gradient(135deg, #0d1b4a 0%, #1a1a2e 100%);
       color: rgba(255, 255, 255, 0.8);
       padding: 28px 32px 18px;
-      margin-top: auto;
+      margin-top: 60px;
       flex-shrink: 0;
     }
     .footer__inner {

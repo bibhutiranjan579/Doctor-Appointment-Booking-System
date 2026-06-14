@@ -352,10 +352,19 @@ export class SearchDoctorsComponent implements OnInit {
         if (res.success) {
           this.doctors = res.data?.items || [];
           this.totalCount = res.data?.totalCount || 0;
+          this.applySorting();
         }
         this.cdr.detectChanges();
       },
       error: () => { this.doctors = []; this.cdr.detectChanges(); }
     });
+  }
+
+  private applySorting(): void {
+    if (this.sortBy === 'name') {
+      this.doctors.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (this.sortBy === 'experience') {
+      this.doctors.sort((a, b) => (b.experience || 0) - (a.experience || 0));
+    }
   }
 }

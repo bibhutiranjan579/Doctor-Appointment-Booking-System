@@ -18,6 +18,9 @@ export class SignalrService {
   userLeftVideo$ = new Subject<string>();
   signalReceived$ = new Subject<{ userId: string; signal: string }>();
   iceCandidateReceived$ = new Subject<{ userId: string; candidate: string }>();
+  incomingCall$ = new Subject<{ callerId: string; callerName: string; roomId: string }>();
+  callAccepted$ = new Subject<{ roomId: string }>();
+  callRejected$ = new Subject<{ roomId: string }>();
 
   constructor(private authService: AuthService, private ngZone: NgZone) {}
 
@@ -72,6 +75,9 @@ export class SignalrService {
         this.videoConnection.on('UserLeft', (userId) => this.ngZone.run(() => this.userLeftVideo$.next(userId)));
         this.videoConnection.on('ReceiveSignal', (userId, signal) => this.ngZone.run(() => this.signalReceived$.next({ userId, signal })));
         this.videoConnection.on('ReceiveIceCandidate', (userId, candidate) => this.ngZone.run(() => this.iceCandidateReceived$.next({ userId, candidate })));
+        this.videoConnection.on('IncomingCall', (callerId, callerName, roomId) => this.ngZone.run(() => this.incomingCall$.next({ callerId, callerName, roomId })));
+        this.videoConnection.on('CallAccepted', (roomId) => this.ngZone.run(() => this.callAccepted$.next({ roomId })));
+        this.videoConnection.on('CallRejected', (roomId) => this.ngZone.run(() => this.callRejected$.next({ roomId })));
 
         try { await this.chatConnection.start(); } catch (e) { console.warn('Chat hub connection failed:', e); }
         try { await this.notificationConnection.start(); } catch (e) { console.warn('Notification hub connection failed:', e); }
@@ -99,6 +105,14 @@ export class SignalrService {
 
   async sendIceCandidate(appointmentId: string, candidate: string): Promise<void> {
     await this.videoConnection?.invoke('SendIceCandidate', appointmentId, candidate);
+  }
+
+  async initiateVideoCall(roomId: string, callerName: string, targetUserId: string): Promise<void> {
+    await this.videoConnection?.invoke('InitiateCall', roomId, callerName, targetUserId);
+  }
+
+  async respondToCall(roomId: string, accepted: boolean, callerUserId: string): Promise<void> {
+    await this.videoConnection?.invoke('RespondToCall', roomId, accepted, callerUserId);
   }
 
   async stopConnections(): Promise<void> {
