@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { HospitalService } from '../../core/services/hospital.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Hospital, CreateHospital } from '../../core/models/models';
@@ -18,7 +19,7 @@ import { Hospital, CreateHospital } from '../../core/models/models';
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSnackBarModule,
-    SidebarComponent, TopNavbarComponent
+    SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -89,13 +90,14 @@ import { Hospital, CreateHospital } from '../../core/models/models';
             }
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .form-card {
       background: #fff; border-radius: 12px; padding: 24px;
@@ -139,6 +141,15 @@ import { Hospital, CreateHospital } from '../../core/models/models';
     }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; opacity: 0.5; }
     .empty-state p { font-size: 16px; margin: 12px 0 0; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } .hospitals-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .form-inline { flex-direction: column; }
+      .flex-field { min-width: 100%; }
+      .hospital-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
   `]
 })
 export class ManageHospitalsComponent implements OnInit {

@@ -90,6 +90,14 @@ import { MatIconModule } from '@angular/material/icon';
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    @media (max-width: 480px) {
+      .stat-card { padding: 16px; }
+      .stat-card__value { font-size: 22px; }
+      .stat-card__label { font-size: 11px; }
+      .stat-card__icon { width: 42px; height: 42px; }
+      .stat-card__icon mat-icon { font-size: 22px; width: 22px; height: 22px; }
+    }
   `]
 })
 export class StatCardComponent {

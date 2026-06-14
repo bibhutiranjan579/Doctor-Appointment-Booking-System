@@ -7,6 +7,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { Subscription, finalize, timeout, catchError, of } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { AppointmentService } from '../../core/services/appointment.service';
@@ -19,7 +20,7 @@ import { Appointment } from '../../core/models/models';
   standalone: true,
   imports: [
     CommonModule, RouterModule, MatButtonModule, MatIconModule, MatBadgeModule,
-    SidebarComponent, TopNavbarComponent, StatCardComponent, StatusBadgeComponent
+    SidebarComponent, TopNavbarComponent, StatCardComponent, StatusBadgeComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -102,13 +103,14 @@ import { Appointment } from '../../core/models/models';
             </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .notification-banner {
       display: flex; align-items: center; gap: 12px;
@@ -164,6 +166,27 @@ import { Appointment } from '../../core/models/models';
       background: #fff; border-radius: 12px;
     }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .dashboard-main { margin-left: 220px; }
+    }
+    /* Mobile */
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .quick-actions { flex-wrap: wrap; }
+      .action-btn { flex: 1; min-width: 120px; font-size: 13px; }
+      .appointment-row { flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+      .appointment-row__right { width: 100%; justify-content: space-between; }
+      .doctor-avatar { width: 40px; height: 40px; font-size: 16px; }
+      .notification-banner { flex-wrap: wrap; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .empty-state { padding: 40px 20px; }
+    }
   `]
 })
 export class PatientDashboardComponent implements OnInit, OnDestroy {

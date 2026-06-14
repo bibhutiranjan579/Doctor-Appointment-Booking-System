@@ -13,200 +13,334 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ChatMessage, ChatContact } from '../../../core/models/models';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar.component';
 import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
+import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSnackBarModule, SidebarComponent, TopNavbarComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSnackBarModule, SidebarComponent, TopNavbarComponent, FooterComponent],
   template: `
     <div class="dashboard-layout">
       <app-sidebar [items]="sidebarItems" [theme]="theme" (logoutClicked)="authService.logout()"></app-sidebar>
       <div class="dashboard-main">
         <app-top-navbar title="Chat" [theme]="theme" [userName]="authService.currentUser?.name || ''" [userRole]="roleLabel" (logoutClicked)="authService.logout()"></app-top-navbar>
         <div class="dashboard-content">
-          <div class="chat-layout">
-            <!-- Left Panel: Contacts -->
-            <div class="chat-sidebar">
-              <div class="chat-sidebar__header">
-                <mat-icon>chat</mat-icon>
-                <h3>Messages</h3>
-              </div>
-              <div class="chat-sidebar__search">
-                <div class="search-input-wrap">
-                  <mat-icon>search</mat-icon>
-                  <input type="text" placeholder="Search contacts..." [(ngModel)]="searchQuery">
+          <div class="chat-container">
+            <div class="chat-layout" [class.show-chat]="!!receiverId" [class.show-contacts]="!receiverId">
+              <!-- Left Panel: Contacts -->
+              <div class="chat-sidebar">
+                <div class="chat-sidebar__header">
+                  <div class="header-left">
+                    <div class="header-avatar">{{ authService.currentUser?.name?.charAt(0) || 'U' }}</div>
+                  </div>
+                  <div class="header-actions">
+                    <button mat-icon-button><mat-icon>chat</mat-icon></button>
+                    <button mat-icon-button><mat-icon>more_vert</mat-icon></button>
+                  </div>
+                </div>
+                <div class="chat-sidebar__search">
+                  <div class="search-input-wrap">
+                    <mat-icon>search</mat-icon>
+                    <input type="text" placeholder="Search or start new chat" [(ngModel)]="searchQuery">
+                  </div>
+                </div>
+                <div class="conversation-list">
+                  @if (loadingContacts) {
+                    <div class="loading-contacts">
+                      <div class="loading-spinner"></div>
+                      <p>Loading chats...</p>
+                    </div>
+                  } @else {
+                    @for (contact of filteredContacts; track contact.userId) {
+                      <div class="conversation-item" [class.active]="contact.userId === receiverId" [class.completed]="!contact.canChat" (click)="selectContact(contact)">
+                        <div class="conv-avatar" [class.doctor-avatar]="contact.role === 'Doctor'" [class.completed-avatar]="!contact.canChat">
+                          {{ contact.name.charAt(0) }}
+                          @if (contact.canChat) {
+                            <span class="online-dot"></span>
+                          }
+                        </div>
+                        <div class="conv-info">
+                          <div class="conv-top-row">
+                            <span class="conv-name">{{ contact.name }}</span>
+                            <span class="conv-time">{{ lastMessages[contact.userId] ? 'now' : '' }}</span>
+                          </div>
+                          <div class="conv-bottom-row">
+                            <span class="conv-preview">
+                              @if (!contact.canChat) {
+                                <mat-icon class="tick-icon">done_all</mat-icon> Appointment completed
+                              } @else if (lastMessages[contact.userId]) {
+                                <mat-icon class="tick-icon">done_all</mat-icon> {{ lastMessages[contact.userId] }}
+                              } @else {
+                                <mat-icon class="role-icon">{{ contact.role === 'Doctor' ? 'medical_services' : 'person' }}</mat-icon>
+                                {{ contact.specialization || contact.role }}
+                              }
+                            </span>
+                            @if (unreadCounts[contact.userId]) {
+                              <span class="unread-badge">{{ unreadCounts[contact.userId] }}</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                    @if (filteredContacts.length === 0 && contacts.length > 0) {
+                      <div class="no-conversations">
+                        <mat-icon>search_off</mat-icon>
+                        <p>No results found</p>
+                      </div>
+                    }
+                    @if (contacts.length === 0) {
+                      <div class="no-conversations">
+                        <mat-icon>forum</mat-icon>
+                        <p>No chats yet</p>
+                        <span class="hint-text">Your conversations will appear here after appointment approval</span>
+                      </div>
+                    }
+                  }
                 </div>
               </div>
-              <div class="conversation-list">
-                @if (loadingContacts) {
-                  <div class="loading-contacts">
-                    <mat-icon>hourglass_empty</mat-icon>
-                    <p>Loading contacts...</p>
+              <!-- Right Panel: Chat Window -->
+              <div class="chat-main">
+                @if (receiverId) {
+                  <div class="chat-main__header">
+                    <button mat-icon-button class="back-btn" (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
+                    <div class="chat-user" (click)="goBack()">
+                      <div class="chat-user-avatar" [class.doctor-avatar]="selectedContact?.role === 'Doctor'">
+                        {{ receiverName.charAt(0) }}
+                        <span class="online-dot-sm"></span>
+                      </div>
+                      <div>
+                        <span class="chat-user-name">{{ receiverName }}</span>
+                        <span class="chat-user-status">{{ selectedContact?.canChat ? 'online' : 'offline' }}</span>
+                      </div>
+                    </div>
+                    <div class="chat-header-actions">
+                      <button mat-icon-button title="Video call"><mat-icon>videocam</mat-icon></button>
+                      <button mat-icon-button title="Voice call"><mat-icon>call</mat-icon></button>
+                      <button mat-icon-button title="More"><mat-icon>more_vert</mat-icon></button>
+                    </div>
+                  </div>
+                  <div class="messages-area" #messagesContainer>
+                    <div class="encryption-notice">
+                      <mat-icon>lock</mat-icon>
+                      <span>Messages are private between you and your {{ selectedContact?.role === 'Doctor' ? 'doctor' : 'patient' }}</span>
+                    </div>
+                    @for (msg of messages; track msg.id) {
+                      <div class="message-wrapper" [class.sent]="isSent(msg)" [class.received]="!isSent(msg)">
+                        <div class="message-bubble">
+                          <p class="message-text">{{ msg.message }}</p>
+                          <div class="message-meta">
+                            <span class="message-time">{{ msg.timestamp | date:'shortTime' }}</span>
+                            @if (isSent(msg)) {
+                              <mat-icon class="read-tick">done_all</mat-icon>
+                            }
+                          </div>
+                          <div class="bubble-tail"></div>
+                        </div>
+                      </div>
+                    }
+                    @if (messages.length === 0 && !loadingMessages) {
+                      <div class="no-messages">
+                        <div class="no-msg-card">
+                          <mat-icon>waving_hand</mat-icon>
+                          <p>Say hello to start the conversation!</p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                  <div class="message-input-area">
+                    @if (selectedContact && !selectedContact.canChat) {
+                      <div class="chat-completed-notice">
+                        <mat-icon>info</mat-icon>
+                        <span>Appointment completed. Book a new one to continue.</span>
+                      </div>
+                    } @else {
+                      <button mat-icon-button class="attach-btn"><mat-icon>mood</mat-icon></button>
+                      <button mat-icon-button class="attach-btn"><mat-icon>attach_file</mat-icon></button>
+                      <input type="text" class="message-input" placeholder="Type a message" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" [disabled]="sending">
+                      <button mat-icon-button class="send-btn" [class.active]="newMessage.trim()" (click)="sendMessage()" [disabled]="!newMessage.trim() || sending">
+                        @if (newMessage.trim()) {
+                          <mat-icon>send</mat-icon>
+                        } @else {
+                          <mat-icon>mic</mat-icon>
+                        }
+                      </button>
+                    }
                   </div>
                 } @else {
-                  @for (contact of filteredContacts; track contact.userId) {
-                    <div class="conversation-item" [class.active]="contact.userId === receiverId" [class.completed]="!contact.canChat" (click)="selectContact(contact)">
-                      <div class="conv-avatar" [class.doctor-avatar]="contact.role === 'Doctor'" [class.completed-avatar]="!contact.canChat">{{ contact.name.charAt(0) }}</div>
-                      <div class="conv-info">
-                        <span class="conv-name">{{ contact.name }}</span>
-                        <span class="conv-role">
-                          @if (!contact.canChat) {
-                            <mat-icon class="role-icon" style="color:#999;">check_circle</mat-icon>
-                            Completed
-                          } @else if (contact.role === 'Doctor') {
-                            <mat-icon class="role-icon">medical_services</mat-icon>
-                            {{ contact.specialization || contact.role }}
-                          } @else {
-                            <mat-icon class="role-icon">person</mat-icon>
-                            {{ contact.specialization || contact.role }}
-                          }
-                        </span>
-                        @if (lastMessages[contact.userId]) {
-                          <span class="conv-preview">{{ lastMessages[contact.userId] }}</span>
-                        }
-                      </div>
-                      @if (unreadCounts[contact.userId]) {
-                        <span class="unread-badge">{{ unreadCounts[contact.userId] }}</span>
-                      }
+                  <div class="chat-empty">
+                    <div class="empty-illustration">
+                      <mat-icon>laptop_mac</mat-icon>
                     </div>
-                  }
-                  @if (filteredContacts.length === 0 && contacts.length > 0) {
-                    <div class="no-conversations">
-                      <mat-icon>search_off</mat-icon>
-                      <p>No matching contacts</p>
+                    <h3>MedBook Web</h3>
+                    <p>Send and receive messages with your healthcare providers.<br>End-to-end private for your security.</p>
+                    <div class="empty-features">
+                      <div class="feature-item"><mat-icon>lock</mat-icon><span>Private messaging</span></div>
+                      <div class="feature-item"><mat-icon>videocam</mat-icon><span>Video consultations</span></div>
+                      <div class="feature-item"><mat-icon>schedule</mat-icon><span>Real-time updates</span></div>
                     </div>
-                  }
-                  @if (contacts.length === 0) {
-                    <div class="no-conversations">
-                      <mat-icon>forum</mat-icon>
-                      <p>No contacts yet</p>
-                      <span class="hint-text">Contacts appear here after your appointment is approved</span>
-                    </div>
-                  }
+                  </div>
                 }
               </div>
             </div>
-            <!-- Right Panel: Chat Window -->
-            <div class="chat-main">
-              @if (receiverId) {
-                <div class="chat-main__header">
-                  <div class="chat-user">
-                    <div class="chat-user-avatar" [class.doctor-avatar]="selectedContact?.role === 'Doctor'">{{ receiverName.charAt(0) }}</div>
-                    <div>
-                      <span class="chat-user-name">{{ receiverName }}</span>
-                      <span class="chat-user-spec">{{ selectedContact?.specialization || selectedContact?.role }}</span>
-                    </div>
-                  </div>
-                  <div class="chat-header-actions">
-                    <button mat-icon-button title="Video call" aria-label="Start video call"><mat-icon>videocam</mat-icon></button>
-                  </div>
-                </div>
-                <div class="messages-area" #messagesContainer>
-                  @for (msg of messages; track msg.id) {
-                    <div class="message-wrapper" [class.sent]="isSent(msg)" [class.received]="!isSent(msg)">
-                      <div class="message-bubble">
-                        @if (!isSent(msg)) {
-                          <span class="message-sender">{{ msg.senderName || receiverName }}</span>
-                        }
-                        <p class="message-text">{{ msg.message }}</p>
-                        <span class="message-time">{{ msg.timestamp | date:'shortTime' }}</span>
-                      </div>
-                    </div>
-                  }
-                  @if (messages.length === 0 && !loadingMessages) {
-                    <div class="no-messages">
-                      <mat-icon>chat_bubble_outline</mat-icon>
-                      <p>No messages yet. Say hello!</p>
-                    </div>
-                  }
-                </div>
-                <div class="message-input-area">
-                  @if (selectedContact && !selectedContact.canChat) {
-                    <div class="chat-completed-notice">
-                      <mat-icon>check_circle</mat-icon>
-                      <span>Appointment completed. Book a new appointment to continue chatting.</span>
-                    </div>
-                  } @else {
-                    <input type="text" class="message-input" placeholder="Type a message..." [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" [disabled]="sending">
-                    <button mat-icon-button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim() || sending">
-                      <mat-icon>send</mat-icon>
-                    </button>
-                  }
-                </div>
-              } @else {
-                <div class="chat-empty">
-                  <mat-icon class="empty-icon">question_answer</mat-icon>
-                  <h3>Select a conversation</h3>
-                  <p>Choose a contact from your approved appointments to start chatting</p>
-                </div>
-              }
-            </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
-    .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 64px 0 0; height: calc(100vh - 64px); }
-    .chat-layout { display: flex; height: calc(100vh - 64px); background: #f0f2f5; }
-    .chat-sidebar { width: 360px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
-    .chat-sidebar__header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: #f8f9fc; border-bottom: 1px solid #e0e0e0; }
-    .chat-sidebar__header mat-icon { color: #5b3a9e; font-size: 28px; width: 28px; height: 28px; }
-    .chat-sidebar__header h3 { margin: 0; font-size: 18px; font-weight: 700; color: #1a1a2e; }
-    .chat-sidebar__search { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
-    .search-input-wrap { flex: 1; display: flex; align-items: center; gap: 8px; background: #f0f2f5; border-radius: 20px; padding: 8px 16px; }
-    .search-input-wrap mat-icon { color: #999; font-size: 20px; }
-    .search-input-wrap input { border: none; outline: none; background: transparent; flex: 1; font-size: 14px; }
+    .dashboard-layout { display: flex; min-height: 100vh; background: #111b21; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; }
+    .dashboard-content { padding: 64px 0 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Chat Container */
+    .chat-container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .chat-layout { display: flex; flex: 1; min-height: 0; background: #eae6df; border-radius: 0; overflow: hidden; }
+
+    /* ===== LEFT SIDEBAR ===== */
+    .chat-sidebar { width: 380px; background: #fff; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid #e9edef; }
+    .chat-sidebar__header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: #008069; min-height: 56px; }
+    .header-left { display: flex; align-items: center; }
+    .header-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; }
+    .header-actions { display: flex; gap: 2px; }
+    .header-actions button { color: rgba(255,255,255,0.85); }
+
+    .chat-sidebar__search { padding: 8px 12px; background: #fff; }
+    .search-input-wrap { display: flex; align-items: center; gap: 12px; background: #f0f2f5; border-radius: 8px; padding: 7px 14px; transition: background 0.2s; }
+    .search-input-wrap:focus-within { background: #fff; box-shadow: 0 0 0 2px #00a884; }
+    .search-input-wrap mat-icon { color: #54656f; font-size: 18px; width: 18px; height: 18px; }
+    .search-input-wrap input { border: none; outline: none; background: transparent; flex: 1; font-size: 14px; color: #111b21; }
+    .search-input-wrap input::placeholder { color: #8696a0; }
+
     .conversation-list { flex: 1; overflow-y: auto; }
-    .conversation-item { display: flex; align-items: center; gap: 12px; padding: 14px 20px; cursor: pointer; transition: background 0.15s ease; border-bottom: 1px solid #f5f5f5; }
-    .conversation-item:hover { background: #f8f9fc; }
-    .conversation-item.active { background: #ede7f6; }
-    .conv-avatar { width: 44px; height: 44px; border-radius: 50%; background: #5b3a9e; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; }
-    .conv-avatar.doctor-avatar { background: #1b7a5a; }
+    .conversation-list::-webkit-scrollbar { width: 6px; }
+    .conversation-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    .conversation-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #f0f2f5; }
+    .conversation-item:hover { background: #f5f6f6; }
+    .conversation-item.active { background: #f0f2f5; }
+    .conversation-item.completed { opacity: 0.6; }
+
+    .conv-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #00a884, #008069); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; flex-shrink: 0; position: relative; }
+    .conv-avatar.doctor-avatar { background: linear-gradient(135deg, #5b3a9e, #7c4dff); }
+    .conv-avatar.completed-avatar { background: #8696a0 !important; }
+    .online-dot { position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; border-radius: 50%; background: #4caf50; border: 2px solid #fff; }
+
     .conv-info { flex: 1; overflow: hidden; }
-    .conv-name { display: block; font-weight: 600; font-size: 14px; color: #1a1a2e; }
-    .conv-role { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #1b7a5a; font-weight: 600; }
-    .role-icon { font-size: 12px; width: 12px; height: 12px; }
-    .conv-preview { display: block; font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-    .unread-badge { background: #5b3a9e; color: #fff; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-    .loading-contacts, .no-conversations { text-align: center; padding: 60px 20px; color: #aaa; }
-    .loading-contacts mat-icon, .no-conversations mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 8px; }
-    .hint-text { font-size: 12px; color: #bbb; display: block; margin-top: 4px; }
-    .chat-main { flex: 1; display: flex; flex-direction: column; }
-    .chat-main__header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #fff; border-bottom: 1px solid #e0e0e0; }
-    .chat-user { display: flex; align-items: center; gap: 12px; }
-    .chat-user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #5b3a9e; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
-    .chat-user-avatar.doctor-avatar { background: #1b7a5a; }
-    .chat-user-name { display: block; font-weight: 600; font-size: 15px; color: #1a1a2e; }
-    .chat-user-spec { display: block; font-size: 11px; color: #1b7a5a; font-weight: 600; }
-    .chat-header-actions { display: flex; gap: 4px; color: #666; }
-    .messages-area { flex: 1; overflow-y: auto; padding: 20px 24px; background: #e5ddd5; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d5ccbb' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-    .message-wrapper { display: flex; margin-bottom: 8px; }
+    .conv-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .conv-name { font-weight: 500; font-size: 16px; color: #111b21; }
+    .conv-time { font-size: 12px; color: #667781; }
+    .conv-bottom-row { display: flex; justify-content: space-between; align-items: center; }
+    .conv-preview { display: flex; align-items: center; gap: 3px; font-size: 13px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .tick-icon { font-size: 16px; width: 16px; height: 16px; color: #53bdeb; }
+    .role-icon { font-size: 14px; width: 14px; height: 14px; color: #667781; }
+    .unread-badge { background: #25d366; color: #fff; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+
+    .loading-contacts { text-align: center; padding: 60px 20px; color: #8696a0; }
+    .loading-spinner { width: 36px; height: 36px; border: 3px solid #e9edef; border-top-color: #00a884; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .no-conversations { text-align: center; padding: 60px 20px; color: #8696a0; }
+    .no-conversations mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; color: #ccc; }
+    .hint-text { font-size: 12px; color: #8696a0; display: block; margin-top: 4px; }
+
+    /* ===== RIGHT CHAT PANEL ===== */
+    .chat-main { flex: 1; display: flex; flex-direction: column; background: #efeae2; position: relative; }
+    .chat-main::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cdefs%3E%3Cpattern id='p' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23d1cdc7' fill-opacity='0.4'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23p)' width='300' height='300'/%3E%3C/svg%3E"); opacity: 0.6; pointer-events: none; z-index: 0; }
+
+    .chat-main__header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #008069; min-height: 56px; z-index: 1; position: relative; }
+    .back-btn { color: #fff; display: none; }
+    .chat-user { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; }
+    .chat-user-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; position: relative; flex-shrink: 0; }
+    .chat-user-avatar.doctor-avatar { background: rgba(124,77,255,0.3); }
+    .online-dot-sm { position: absolute; bottom: 1px; right: 1px; width: 8px; height: 8px; border-radius: 50%; background: #4caf50; border: 2px solid #008069; }
+    .chat-user-name { display: block; font-weight: 500; font-size: 15px; color: #fff; }
+    .chat-user-status { display: block; font-size: 12px; color: rgba(255,255,255,0.7); }
+    .chat-header-actions { display: flex; gap: 0; }
+    .chat-header-actions button { color: rgba(255,255,255,0.85); }
+
+    /* Messages */
+    .messages-area { flex: 1; overflow-y: auto; padding: 20px 60px; z-index: 1; position: relative; }
+    .messages-area::-webkit-scrollbar { width: 6px; }
+    .messages-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+
+    .encryption-notice { display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(255,234,163,0.9); border-radius: 8px; padding: 6px 14px; margin: 0 auto 16px; max-width: 420px; }
+    .encryption-notice mat-icon { font-size: 14px; width: 14px; height: 14px; color: #8a6d3b; }
+    .encryption-notice span { font-size: 12px; color: #54656f; text-align: center; }
+
+    .message-wrapper { display: flex; margin-bottom: 3px; }
     .message-wrapper.sent { justify-content: flex-end; }
     .message-wrapper.received { justify-content: flex-start; }
-    .message-bubble { max-width: 65%; padding: 8px 14px; border-radius: 12px; }
-    .sent .message-bubble { background: #dcf8c6; border-bottom-right-radius: 4px; }
-    .received .message-bubble { background: #fff; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
-    .message-sender { display: block; font-size: 11px; font-weight: 600; color: #5b3a9e; margin-bottom: 2px; }
-    .message-text { margin: 0; font-size: 14px; color: #333; line-height: 1.4; word-break: break-word; }
-    .message-time { display: block; text-align: right; font-size: 10px; color: #999; margin-top: 4px; }
-    .no-messages { text-align: center; padding: 80px 0; color: #aaa; }
-    .no-messages mat-icon { font-size: 48px; width: 48px; height: 48px; }
-    .message-input-area { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #fff; border-top: 1px solid #e0e0e0; }
-    .message-input { flex: 1; border: none; outline: none; background: #f0f2f5; border-radius: 20px; padding: 10px 20px; font-size: 14px; }
-    .send-btn { color: #5b3a9e; }
-    .send-btn:disabled { color: #ccc; }
-    .chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #aaa; }
-    .empty-icon { font-size: 80px; width: 80px; height: 80px; color: #ddd; margin-bottom: 16px; }
-    .chat-empty h3 { margin: 0 0 8px; font-size: 20px; color: #666; }
-    .chat-empty p { margin: 0; font-size: 14px; }
-    .conversation-item.completed { opacity: 0.7; }
-    .completed-avatar { background: #999 !important; }
-    .chat-completed-notice { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff3e0; border-radius: 8px; color: #e65100; font-size: 13px; flex: 1; }
-    .chat-completed-notice mat-icon { font-size: 18px; width: 18px; height: 18px; color: #e65100; flex-shrink: 0; }
-    @media (max-width: 768px) { .chat-sidebar { width: 100%; } .chat-main { display: none; } }
+    .message-bubble { max-width: 65%; padding: 6px 8px 4px; border-radius: 8px; position: relative; box-shadow: 0 1px 0.5px rgba(11,20,26,0.13); }
+    .sent .message-bubble { background: #d9fdd3; border-top-right-radius: 0; }
+    .received .message-bubble { background: #fff; border-top-left-radius: 0; }
+
+    .message-text { margin: 0; font-size: 14.2px; color: #111b21; line-height: 1.35; word-break: break-word; padding-right: 48px; }
+    .message-meta { display: flex; align-items: center; justify-content: flex-end; gap: 3px; margin-top: -10px; float: right; padding-left: 8px; }
+    .message-time { font-size: 11px; color: #667781; }
+    .read-tick { font-size: 16px; width: 16px; height: 16px; color: #53bdeb; }
+
+    .no-messages { display: flex; align-items: center; justify-content: center; padding: 60px 0; }
+    .no-msg-card { text-align: center; background: rgba(255,234,163,0.9); border-radius: 10px; padding: 12px 24px; }
+    .no-msg-card mat-icon { font-size: 28px; width: 28px; height: 28px; color: #8a6d3b; }
+    .no-msg-card p { margin: 4px 0 0; font-size: 13px; color: #54656f; }
+
+    /* Input Area */
+    .message-input-area { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: #f0f2f5; z-index: 1; position: relative; }
+    .attach-btn { color: #54656f; }
+    .message-input { flex: 1; border: none; outline: none; background: #fff; border-radius: 8px; padding: 9px 16px; font-size: 15px; color: #111b21; box-shadow: 0 1px 1px rgba(0,0,0,0.06); }
+    .message-input::placeholder { color: #8696a0; }
+    .send-btn { color: #8696a0; transition: color 0.2s; }
+    .send-btn.active { color: #00a884; }
+    .send-btn:disabled { color: #8696a0; }
+
+    .chat-completed-notice { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #ffeaa3; border-radius: 8px; color: #54656f; font-size: 13px; flex: 1; }
+    .chat-completed-notice mat-icon { font-size: 18px; width: 18px; height: 18px; color: #8a6d3b; flex-shrink: 0; }
+
+    /* Empty State */
+    .chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; position: relative; background: #f0f2f5; border-bottom: 6px solid #25d366; }
+    .empty-illustration { margin-bottom: 24px; }
+    .empty-illustration mat-icon { font-size: 72px; width: 72px; height: 72px; color: #cfd8dc; }
+    .chat-empty h3 { margin: 0 0 12px; font-size: 28px; font-weight: 300; color: #41525d; }
+    .chat-empty p { margin: 0 0 24px; font-size: 14px; color: #667781; text-align: center; line-height: 1.5; }
+    .empty-features { display: flex; gap: 24px; }
+    .feature-item { display: flex; align-items: center; gap: 8px; color: #667781; font-size: 13px; }
+    .feature-item mat-icon { font-size: 18px; width: 18px; height: 18px; color: #00a884; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .dashboard-main { margin-left: 220px; }
+      .chat-sidebar { width: 320px; }
+      .messages-area { padding: 16px 30px; }
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; min-height: 100vh; }
+      .dashboard-content { padding: 56px 0 0; }
+      .chat-container { flex: 1; }
+      .chat-layout { height: calc(100vh - 56px); position: relative; }
+
+      /* Mobile: toggle contacts vs chat */
+      .chat-sidebar { position: absolute; inset: 0; width: 100%; z-index: 2; transition: transform 0.25s ease; }
+      .chat-main { position: absolute; inset: 0; z-index: 3; transform: translateX(100%); transition: transform 0.25s ease; }
+      .chat-layout.show-chat .chat-main { transform: translateX(0); }
+      .chat-layout.show-chat .chat-sidebar { transform: translateX(-100%); }
+      .chat-layout.show-contacts .chat-sidebar { transform: translateX(0); }
+      .chat-layout.show-contacts .chat-main { transform: translateX(100%); }
+
+      .back-btn { display: inline-flex !important; }
+      .chat-main__header { padding: 8px 10px; min-height: 48px; }
+      .chat-user-avatar { width: 34px; height: 34px; font-size: 14px; }
+      .chat-user-name { font-size: 14px; }
+      .messages-area { padding: 12px 14px; }
+      .message-bubble { max-width: 85%; }
+      .message-text { font-size: 14px; padding-right: 44px; }
+      .message-input-area { padding: 6px 8px; }
+      .message-input { padding: 8px 12px; font-size: 14px; }
+      .encryption-notice { max-width: 90%; }
+      .chat-empty { display: none; }
+      .empty-features { flex-direction: column; gap: 12px; }
+      app-footer { display: none; }
+    }
   `]
 })
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
@@ -315,6 +449,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.receiverName = contact.name;
     this.unreadCounts[contact.userId] = 0;
     this.loadConversation();
+  }
+
+  goBack(): void {
+    this.receiverId = '';
+    this.receiverName = '';
+    this.selectedContact = null;
+    this.messages = [];
   }
 
   loadConversation(): void {

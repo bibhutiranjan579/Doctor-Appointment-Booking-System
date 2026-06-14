@@ -81,6 +81,25 @@ import { MatBadgeModule } from '@angular/material/badge';
       color: #888;
       margin-top: 2px;
     }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .top-navbar {
+        left: 220px;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .top-navbar {
+        left: 0;
+        padding-left: 64px;
+        height: 56px;
+      }
+      .page-title {
+        font-size: 16px;
+      }
+    }
   `]
 })
 export class TopNavbarComponent {

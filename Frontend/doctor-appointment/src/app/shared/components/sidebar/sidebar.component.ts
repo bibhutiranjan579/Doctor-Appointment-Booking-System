@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 export interface SidebarItem {
   label: string;
@@ -13,9 +14,17 @@ export interface SidebarItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatListModule, MatIconModule],
+  imports: [CommonModule, RouterModule, MatListModule, MatIconModule, MatButtonModule],
   template: `
-    <aside class="sidebar" [class]="'sidebar--' + theme">
+    <!-- Mobile backdrop -->
+    <div class="sidebar-backdrop" [class.active]="mobileOpen" (click)="closeMobile()"></div>
+
+    <!-- Mobile hamburger button -->
+    <button class="mobile-toggle" (click)="toggleMobile()" [class]="'mobile-toggle--' + theme">
+      <mat-icon>{{ mobileOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+
+    <aside class="sidebar" [class]="'sidebar--' + theme" [class.sidebar--open]="mobileOpen">
       <div class="sidebar__brand">
         <mat-icon class="sidebar__brand-icon">local_hospital</mat-icon>
         <span class="sidebar__brand-text">MedBook</span>
@@ -23,7 +32,7 @@ export interface SidebarItem {
       <nav>
         <mat-nav-list>
           @for (item of items; track item.route) {
-            <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link">
+            <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link" (click)="closeMobile()">
               <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
               <span matListItemTitle>{{ item.label }}</span>
             </a>
@@ -41,6 +50,40 @@ export interface SidebarItem {
     </aside>
   `,
   styles: [`
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 16px;
+      z-index: 1100;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .mobile-toggle--admin { background: #1b3a7b; }
+    .mobile-toggle--doctor { background: #1b7a5a; }
+    .mobile-toggle--patient { background: #5b3a9e; }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+
     .sidebar {
       width: 260px;
       height: 100vh;
@@ -50,7 +93,7 @@ export interface SidebarItem {
       display: flex;
       flex-direction: column;
       z-index: 1001;
-      transition: all 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .sidebar--admin {
       background: linear-gradient(180deg, #0d1b4a 0%, #1b3a7b 100%);
@@ -83,6 +126,7 @@ export interface SidebarItem {
     nav {
       flex: 1;
       padding-top: 8px;
+      overflow-y: auto;
     }
     .sidebar__footer {
       border-top: 1px solid rgba(255,255,255,0.1);
@@ -107,6 +151,28 @@ export interface SidebarItem {
     :host ::ng-deep .mat-icon {
       color: inherit !important;
     }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 220px;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .mobile-toggle {
+        display: flex;
+      }
+      .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+      }
+      .sidebar--open {
+        transform: translateX(0);
+      }
+    }
   `]
 })
 export class SidebarComponent {
@@ -114,7 +180,24 @@ export class SidebarComponent {
   @Input() theme: 'admin' | 'doctor' | 'patient' = 'admin';
   @Output() logoutClicked = new EventEmitter<void>();
 
+  mobileOpen = false;
+
+  toggleMobile(): void {
+    this.mobileOpen = !this.mobileOpen;
+  }
+
+  closeMobile(): void {
+    this.mobileOpen = false;
+  }
+
   onLogout(): void {
     this.logoutClicked.emit();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth > 768) {
+      this.mobileOpen = false;
+    }
   }
 }

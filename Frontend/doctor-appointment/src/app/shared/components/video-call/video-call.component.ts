@@ -8,11 +8,12 @@ import { SignalrService } from '../../../core/services/signalr.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar.component';
 import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
+import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-video-call',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, SidebarComponent, TopNavbarComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, SidebarComponent, TopNavbarComponent, FooterComponent],
   template: `
     <div class="dashboard-layout">
       <app-sidebar [items]="sidebarItems" [theme]="theme" (logoutClicked)="authService.logout()"></app-sidebar>
@@ -67,12 +68,13 @@ import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
       </div>
     </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #1a1a2e; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
     .dashboard-content-vc { padding-top: 64px; }
     .video-page {
       height: calc(100vh - 64px);
@@ -196,7 +198,10 @@ import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
     }
     .end-btn:hover { background: #b71c1c !important; }
 
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
     @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
       .local-video-wrapper { width: 140px; height: 105px; }
       .controls-bar { gap: 10px; }
       .control-btn { width: 48px !important; height: 48px !important; }

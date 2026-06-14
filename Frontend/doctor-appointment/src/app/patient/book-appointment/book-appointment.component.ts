@@ -15,6 +15,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatDividerModule } from '@angular/material/divider';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -26,7 +27,7 @@ import { AuthService } from '../../core/services/auth.service';
     MatButtonModule, MatIconModule, MatDatepickerModule, MatNativeDateModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatRadioModule,
     MatStepperModule, MatDividerModule,
-    SidebarComponent, TopNavbarComponent
+    SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -214,13 +215,14 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .booking-wrapper { display: flex; justify-content: center; }
     .booking-card {
@@ -307,6 +309,13 @@ import { AuthService } from '../../core/services/auth.service';
     .btn-spinner { display: inline-block; }
     :host ::ng-deep .btn-spinner circle { stroke: #fff !important; }
     .payment-method-section { margin-bottom: 4px; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .btn-row { flex-direction: column; }
+    }
   `]
 })
 export class BookAppointmentComponent implements OnInit {

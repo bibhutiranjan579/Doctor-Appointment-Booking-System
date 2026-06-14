@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { FeedbackService } from '../../core/services/feedback.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AdminFeedbackAnalytics, Feedback } from '../../core/models/models';
@@ -13,7 +14,7 @@ import { AdminFeedbackAnalytics, Feedback } from '../../core/models/models';
 @Component({
   selector: 'app-admin-feedback',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatCardModule, MatButtonModule, MatSnackBarModule, SidebarComponent, TopNavbarComponent],
+  imports: [CommonModule, MatIconModule, MatCardModule, MatButtonModule, MatSnackBarModule, SidebarComponent, TopNavbarComponent, FooterComponent],
   template: `
     <div class="dashboard-layout">
       <app-sidebar [items]="sidebarItems" theme="admin" (logoutClicked)="authService.logout()"></app-sidebar>
@@ -227,13 +228,14 @@ import { AdminFeedbackAnalytics, Feedback } from '../../core/models/models';
             <div class="section-card"><div class="empty-msg"><mat-icon>hourglass_empty</mat-icon><p>Loading analytics...</p></div></div>
           }
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .tab-row { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
     .tab-btn { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: 2px solid #e0e0e0; background: #fff; color: #555; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
@@ -342,6 +344,12 @@ import { AdminFeedbackAnalytics, Feedback } from '../../core/models/models';
     .empty-msg { text-align: center; padding: 40px; color: #aaa; }
     .empty-msg mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
     .empty-msg p { margin: 0; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+    }
   `]
 })
 export class AdminFeedbackComponent implements OnInit {

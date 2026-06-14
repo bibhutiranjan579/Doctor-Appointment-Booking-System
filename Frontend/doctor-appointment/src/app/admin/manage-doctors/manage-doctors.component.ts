@@ -11,6 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DoctorService } from '../../core/services/doctor.service';
 import { HospitalService } from '../../core/services/hospital.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -22,7 +23,7 @@ import { Doctor, CreateDoctor, Hospital } from '../../core/models/models';
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSnackBarModule, MatDialogModule, MatCheckboxModule,
-    MatSelectModule, SidebarComponent, TopNavbarComponent
+    MatSelectModule, SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -146,13 +147,14 @@ import { Doctor, CreateDoctor, Hospital } from '../../core/models/models';
             }
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .form-card {
       background: #fff; border-radius: 12px; padding: 24px;
@@ -216,6 +218,15 @@ import { Doctor, CreateDoctor, Hospital } from '../../core/models/models';
     .weekday-chip:hover { border-color: #1b3a7b; color: #1b3a7b; }
     .weekday-chip.selected {
       background: #1b3a7b; color: #fff; border-color: #1b3a7b;
+    }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } .doctors-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .doctor-card { flex-direction: column; }
+      .form-card { padding: 16px; }
     }
   `]
 })

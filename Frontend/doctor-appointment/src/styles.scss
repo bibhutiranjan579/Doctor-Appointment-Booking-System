@@ -51,3 +51,45 @@ a {
 .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-icon-button, .mat-mdc-fab {
   transition: all 0.2s ease !important;
 }
+
+// ============================================
+// RESPONSIVE UTILITIES
+// ============================================
+
+// Mobile sidebar overlay backdrop
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  &.active {
+    display: block;
+    opacity: 1;
+  }
+}
+
+// Responsive typography
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+// Safe area support for notched devices
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+// Touch-friendly targets
+@media (hover: none) and (pointer: coarse) {
+  .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-icon-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { FeedbackService } from '../../core/services/feedback.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DoctorRatingSummary, Feedback } from '../../core/models/models';
@@ -15,7 +16,7 @@ import { DoctorRatingSummary, Feedback } from '../../core/models/models';
 @Component({
   selector: 'app-doctor-feedback',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatCardModule, MatButtonModule, MatSelectModule, MatFormFieldModule, SidebarComponent, TopNavbarComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, MatCardModule, MatButtonModule, MatSelectModule, MatFormFieldModule, SidebarComponent, TopNavbarComponent, FooterComponent],
   template: `
     <div class="dashboard-layout">
       <app-sidebar [items]="sidebarItems" theme="doctor" (logoutClicked)="authService.logout()"></app-sidebar>
@@ -129,13 +130,14 @@ import { DoctorRatingSummary, Feedback } from '../../core/models/models';
             <div class="section-card"><div class="empty-msg"><mat-icon>feedback</mat-icon><p>No feedback data available.</p></div></div>
           }
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
     .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
     .stat-card { background: #fff; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
     .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
@@ -196,6 +198,18 @@ import { DoctorRatingSummary, Feedback } from '../../core/models/models';
     .empty-msg { text-align: center; padding: 40px; color: #aaa; }
     .empty-msg mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
     .empty-msg p { margin: 0; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } .charts-row { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .feedback-row { flex-direction: column; }
+      .filter-row { flex-wrap: wrap; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+    }
   `]
 })
 export class DoctorFeedbackComponent implements OnInit {

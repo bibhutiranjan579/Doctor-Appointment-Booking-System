@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -20,7 +21,7 @@ import { Appointment } from '../../core/models/models';
   imports: [
     CommonModule, FormsModule, MatIconModule, MatButtonModule,
     MatSelectModule, MatFormFieldModule, MatSnackBarModule, MatTooltipModule,
-    SidebarComponent, TopNavbarComponent, StatusBadgeComponent
+    SidebarComponent, TopNavbarComponent, StatusBadgeComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -129,13 +130,14 @@ import { Appointment } from '../../core/models/models';
             }
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .filters-bar {
       display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
@@ -186,6 +188,14 @@ import { Appointment } from '../../core/models/models';
       margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f0f0;
     }
     .active-page { background: #1b3a7b !important; color: #fff !important; border-radius: 8px !important; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .filters-bar { flex-wrap: wrap; }
+      .custom-table th, .custom-table td { padding: 10px 8px; font-size: 12px; }
+    }
   `]
 })
 export class ViewAppointmentsComponent implements OnInit {

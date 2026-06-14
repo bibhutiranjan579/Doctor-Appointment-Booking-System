@@ -8,6 +8,7 @@ import { NgxChartsModule, LegendPosition } from '@swimlane/ngx-charts';
 import { forkJoin, finalize, timeout, catchError, of } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { AuthService } from '../../core/services/auth.service';
@@ -22,7 +23,7 @@ import { Appointment, ApiResponse, Doctor, Hospital, Patient, PagedResult } from
   standalone: true,
   imports: [
     CommonModule, RouterModule, MatSnackBarModule, MatIconModule, MatButtonModule,
-    NgxChartsModule, SidebarComponent, TopNavbarComponent, StatCardComponent, StatusBadgeComponent
+    NgxChartsModule, SidebarComponent, TopNavbarComponent, StatCardComponent, StatusBadgeComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -51,7 +52,6 @@ import { Appointment, ApiResponse, Doctor, Hospital, Patient, PagedResult } from
               <h3>Appointment Status Overview</h3>
               <ngx-charts-pie-chart
                 [results]="appointmentStatusData"
-                [view]="[480, 300]"
                 [gradient]="true"
                 [legend]="true"
                 [legendTitle]="''"
@@ -65,7 +65,6 @@ import { Appointment, ApiResponse, Doctor, Hospital, Patient, PagedResult } from
               <h3>Monthly Appointments</h3>
               <ngx-charts-bar-vertical
                 [results]="monthlyData"
-                [view]="[500, 280]"
                 [xAxis]="true"
                 [yAxis]="true"
                 [gradient]="true"
@@ -119,13 +118,14 @@ import { Appointment, ApiResponse, Doctor, Hospital, Patient, PagedResult } from
             </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .stats-row {
       display: grid;
@@ -145,6 +145,7 @@ import { Appointment, ApiResponse, Doctor, Hospital, Patient, PagedResult } from
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden;
     }
     .chart-card h3 {
       margin: 0 0 16px;
@@ -222,12 +223,26 @@ import { Appointment, ApiResponse, Doctor, Hospital, Patient, PagedResult } from
       padding: 40px 0 !important;
     }
 
+    /* Tablet */
     @media (max-width: 1024px) {
+      .dashboard-main { margin-left: 220px; }
       .charts-row { grid-template-columns: 1fr; }
+      .chart-card { overflow-x: auto; }
     }
+    /* Mobile */
     @media (max-width: 768px) {
       .dashboard-main { margin-left: 0; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .charts-row { gap: 12px; }
+      .chart-card { padding: 16px; }
+      .table-card { padding: 16px; }
+      .custom-table th, .custom-table td { padding: 10px 8px; font-size: 12px; }
+      .user-cell { gap: 6px; }
+      .user-avatar { width: 28px; height: 28px; font-size: 11px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
     }
   `]
 })

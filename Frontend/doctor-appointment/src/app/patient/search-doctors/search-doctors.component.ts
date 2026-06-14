@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DoctorService } from '../../core/services/doctor.service';
 import { HospitalService } from '../../core/services/hospital.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -22,7 +23,7 @@ import { HttpClient } from '@angular/common/http';
   imports: [
     CommonModule, FormsModule, RouterModule, MatFormFieldModule,
     MatInputModule, MatButtonModule, MatSelectModule, MatIconModule,
-    MatSnackBarModule, SidebarComponent, TopNavbarComponent
+    MatSnackBarModule, SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -149,13 +150,14 @@ import { HttpClient } from '@angular/common/http';
             }
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     /* Location Bar */
     .location-bar {
@@ -247,6 +249,12 @@ import { HttpClient } from '@angular/common/http';
       background: #fff; border-radius: 12px;
     }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+    }
   `]
 })
 export class SearchDoctorsComponent implements OnInit {

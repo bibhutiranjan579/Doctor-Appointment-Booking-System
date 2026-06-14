@@ -12,6 +12,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { FeedbackService } from '../../core/services/feedback.service';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,7 +24,7 @@ import { Appointment, Feedback, CreateFeedback, DoctorRatingSummary } from '../.
   imports: [
     CommonModule, FormsModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSnackBarModule, MatSelectModule,
-    MatCardModule, MatCheckboxModule, MatChipsModule, SidebarComponent, TopNavbarComponent
+    MatCardModule, MatCheckboxModule, MatChipsModule, SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -201,13 +202,14 @@ import { Appointment, Feedback, CreateFeedback, DoctorRatingSummary } from '../.
             </div>
           }
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
     .section-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; }
     .section-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; color: #1a1a2e; margin: 0 0 20px; }
     .section-title mat-icon { color: #1b3a7b; }
@@ -271,6 +273,12 @@ import { Appointment, Feedback, CreateFeedback, DoctorRatingSummary } from '../.
     .empty-msg { text-align: center; padding: 32px; color: #aaa; }
     .empty-msg mat-icon { font-size: 40px; width: 40px; height: 40px; margin-bottom: 8px; }
     .empty-msg p { margin: 0; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+    }
   `]
 })
 export class PatientFeedbackComponent implements OnInit {

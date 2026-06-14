@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ActivatedRoute } from '@angular/router';
 import { SidebarComponent, SidebarItem } from '../sidebar/sidebar.component';
 import { TopNavbarComponent } from '../top-navbar/top-navbar.component';
+import { FooterComponent } from '../footer/footer.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserProfile } from '../../../core/models/models';
 import { environment } from '../../../../environments/environment';
@@ -22,7 +23,7 @@ import { environment } from '../../../../environments/environment';
   imports: [
     CommonModule, FormsModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatSelectModule, MatSnackBarModule, MatDividerModule,
-    SidebarComponent, TopNavbarComponent
+    SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -138,13 +139,14 @@ import { environment } from '../../../../environments/environment';
             </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .profile-wrapper { max-width: 800px; margin: 0 auto; }
 
@@ -209,7 +211,10 @@ import { environment } from '../../../../environments/environment';
     .save-btn--patient:hover { background: #2d1b69 !important; }
     .save-btn:disabled { opacity: 0.7; }
 
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
     @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
       .form-grid { grid-template-columns: 1fr; }
       .profile-header { flex-direction: column; text-align: center; }
     }

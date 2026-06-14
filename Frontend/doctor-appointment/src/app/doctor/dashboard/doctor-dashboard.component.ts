@@ -7,6 +7,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize, timeout, catchError, of } from 'rxjs';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { AppointmentService } from '../../core/services/appointment.service';
@@ -18,7 +19,7 @@ import { Appointment } from '../../core/models/models';
   standalone: true,
   imports: [
     CommonModule, RouterModule, MatButtonModule, MatIconModule, MatSnackBarModule,
-    SidebarComponent, TopNavbarComponent, StatCardComponent, StatusBadgeComponent
+    SidebarComponent, TopNavbarComponent, StatCardComponent, StatusBadgeComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -109,13 +110,14 @@ import { Appointment } from '../../core/models/models';
             </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .stats-row {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -174,6 +176,27 @@ import { Appointment } from '../../core/models/models';
       grid-column: 1 / -1; text-align: center; padding: 60px; color: #aaa;
     }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .dashboard-main { margin-left: 220px; }
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+    /* Mobile */
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .cards-grid { grid-template-columns: 1fr; gap: 12px; }
+      .appointment-card { padding: 16px; }
+      .appointment-card__header { flex-direction: column; gap: 8px; }
+      .appointment-card__actions { flex-wrap: wrap; }
+      .appointment-card__actions button { flex: 1; min-width: 80px; font-size: 12px; }
+      .patient-avatar { width: 36px; height: 36px; font-size: 15px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+    }
   `]
 })
 export class DoctorDashboardComponent implements OnInit {

@@ -14,6 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService } from '../../core/services/auth.service';
 import { RegisterRequest } from '../../core/models/models';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 
 @Component({
   selector: 'app-register',
@@ -22,7 +23,7 @@ import { RegisterRequest } from '../../core/models/models';
     CommonModule, FormsModule, RouterModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatButtonModule,
     MatSelectModule, MatIconModule, MatButtonToggleModule,
-    MatProgressSpinnerModule, MatSnackBarModule
+    MatProgressSpinnerModule, MatSnackBarModule, FooterComponent
   ],
   animations: [
     trigger('fadeSlideIn', [
@@ -33,11 +34,14 @@ import { RegisterRequest } from '../../core/models/models';
     ])
   ],
   template: `
-    <div class="register-page">
-      <!-- Left side: Illustration -->
-      <div class="register-left" [class]="'register-left--' + registerData.role.toLowerCase()">
-        <div class="register-left__content" @fadeSlideIn>
-          <mat-icon class="hero-icon">local_hospital</mat-icon>
+    <div class="register-wrapper">
+      <div class="register-page">
+        <!-- Left side: Illustration -->
+        <div class="register-left" [class]="'register-left--' + registerData.role.toLowerCase()">
+          <div class="register-left__content" @fadeSlideIn>
+            <div class="logo-box">
+              <mat-icon class="hero-icon">local_hospital</mat-icon>
+            </div>
           <h1>MedBook</h1>
           <p class="subtitle">Join our healthcare platform today</p>
           <div class="features">
@@ -168,13 +172,20 @@ import { RegisterRequest } from '../../core/models/models';
           </div>
         </div>
       </div>
+      </div>
+      <app-footer></app-footer>
     </div>
   `,
   styles: [`
     .register-page {
       display: flex;
-      min-height: 100vh;
+      flex: 1;
       overflow: hidden;
+    }
+    .register-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     .register-left {
       flex: 1;
@@ -190,7 +201,19 @@ import { RegisterRequest } from '../../core/models/models';
       color: #fff;
       padding: 40px;
     }
-    .hero-icon { font-size: 72px; width: 72px; height: 72px; margin-bottom: 16px; opacity: 0.9; }
+    .hero-icon { font-size: 48px; width: 48px; height: 48px; opacity: 0.95; }
+    .logo-box {
+      width: 90px;
+      height: 90px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
     .register-left__content h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: 2px; }
     .subtitle { font-size: 16px; opacity: 0.85; margin: 8px 0 40px; }
     .features { display: flex; flex-direction: column; gap: 16px; align-items: center; }
@@ -243,8 +266,10 @@ import { RegisterRequest } from '../../core/models/models';
 
     .register-btn {
       height: 48px; font-size: 16px; font-weight: 600; border-radius: 10px !important;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
       color: #fff !important; border: none; transition: all 0.3s ease;
+    }
+    :host ::ng-deep .register-btn .mdc-button__label {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .register-btn--admin { background: #1b3a7b !important; }
     .register-btn--admin:hover { background: #0d1b4a !important; }
@@ -281,6 +306,15 @@ import { RegisterRequest } from '../../core/models/models';
       .register-left { display: none; }
       .register-right { flex: none; width: 100%; }
     }
+    @media (max-width: 480px) {
+      .register-right { padding: 24px 16px; }
+      .register-form-wrapper { max-width: 100%; }
+      .form-header h2 { font-size: 22px; }
+      .form-row { flex-direction: column; gap: 0; }
+      .half-width { width: 100%; }
+      .register-btn { height: 44px; font-size: 14px; }
+    }
+    :host ::ng-deep app-footer .footer { margin-top: 0; }
   `]
 })
 export class RegisterComponent {
@@ -322,11 +356,22 @@ export class RegisterComponent {
           this.snackBar.open('Account created successfully!', 'Close', { duration: 3000 });
           if (res.data.role === 'Admin') this.router.navigate(['/admin/dashboard']);
           else this.router.navigate(['/patient/dashboard']);
+        } else {
+          this.errorMessage = res.message || 'Registration failed. Please check your details and try again.';
         }
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Registration failed. Please try again.';
+        const msg = err.error?.message || err.error?.errors?.join(', ') || err.error?.title || '';
+        if (err.status === 400) {
+          this.errorMessage = msg || 'Invalid details. Password must have 8+ chars with uppercase, lowercase, number, and special character.';
+        } else if (err.status === 409) {
+          this.errorMessage = msg || 'An account with this email already exists.';
+        } else if (err.status === 0) {
+          this.errorMessage = 'Unable to connect to server. Please check your internet connection.';
+        } else {
+          this.errorMessage = msg || 'Registration failed. Please try again.';
+        }
       }
     });
   }

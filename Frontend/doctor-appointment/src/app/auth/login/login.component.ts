@@ -14,6 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService } from '../../core/services/auth.service';
 import { LoginRequest } from '../../core/models/models';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +23,7 @@ import { LoginRequest } from '../../core/models/models';
     CommonModule, FormsModule, RouterModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatButtonModule,
     MatButtonToggleModule, MatIconModule, MatCheckboxModule,
-    MatProgressSpinnerModule, MatSnackBarModule
+    MatProgressSpinnerModule, MatSnackBarModule, FooterComponent
   ],
   animations: [
     trigger('fadeSlideIn', [
@@ -33,35 +34,38 @@ import { LoginRequest } from '../../core/models/models';
     ])
   ],
   template: `
-    <div class="login-page">
-      <!-- Left side: Illustration -->
-      <div class="login-left" [class]="'login-left--' + selectedRole.toLowerCase()">
-        <div class="login-left__overlay">
-          <div class="login-left__content" @fadeSlideIn>
-            <mat-icon class="login-left__hero-icon">local_hospital</mat-icon>
-            <h1>MedBook</h1>
-            <p class="login-left__subtitle">Your Health, Our Priority</p>
-            <div class="login-left__features">
-              <div class="feature-item">
-                <mat-icon>calendar_today</mat-icon>
-                <span>Easy Appointment Booking</span>
+    <div class="login-wrapper">
+      <div class="login-page">
+        <!-- Left side: Illustration -->
+        <div class="login-left" [class]="'login-left--' + selectedRole.toLowerCase()">
+          <div class="login-left__overlay">
+            <div class="login-left__content" @fadeSlideIn>
+              <div class="logo-box">
+                <mat-icon class="login-left__hero-icon">local_hospital</mat-icon>
               </div>
-              <div class="feature-item">
-                <mat-icon>videocam</mat-icon>
-                <span>Video Consultations</span>
-              </div>
-              <div class="feature-item">
-                <mat-icon>chat</mat-icon>
-                <span>Instant Chat Support</span>
+              <h1>MedBook</h1>
+              <p class="login-left__subtitle">Your Health, Our Priority</p>
+              <div class="login-left__features">
+                <div class="feature-item">
+                  <mat-icon>calendar_today</mat-icon>
+                  <span>Easy Appointment Booking</span>
+                </div>
+                <div class="feature-item">
+                  <mat-icon>videocam</mat-icon>
+                  <span>Video Consultations</span>
+                </div>
+                <div class="feature-item">
+                  <mat-icon>chat</mat-icon>
+                  <span>Instant Chat Support</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right side: Login Form -->
-      <div class="login-right">
-        <div class="login-form-wrapper" @fadeSlideIn>
+        <!-- Right side: Login Form -->
+        <div class="login-right">
+          <div class="login-form-wrapper" @fadeSlideIn>
           <div class="login-form-header">
             <h2>Welcome Back</h2>
             <p>Sign in to your account</p>
@@ -132,14 +136,21 @@ import { LoginRequest } from '../../core/models/models';
           <div class="login-footer">
             <p>Don't have an account? <a routerLink="/auth/register" class="link" [class]="'link--' + selectedRole.toLowerCase()">Register here</a></p>
           </div>
+          </div>
         </div>
       </div>
+      <app-footer></app-footer>
     </div>
   `,
   styles: [`
+    .login-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
     .login-page {
       display: flex;
-      min-height: 100vh;
+      flex: 1;
       overflow: hidden;
     }
 
@@ -170,12 +181,23 @@ import { LoginRequest } from '../../core/models/models';
       color: #fff;
       padding: 40px;
     }
+    .logo-box {
+      width: 90px;
+      height: 90px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
     .login-left__hero-icon {
-      font-size: 72px;
-      width: 72px;
-      height: 72px;
-      margin-bottom: 16px;
-      opacity: 0.9;
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      opacity: 0.95;
     }
     .login-left__content h1 {
       font-size: 42px;
@@ -311,13 +333,15 @@ import { LoginRequest } from '../../core/models/models';
       font-size: 16px;
       font-weight: 600;
       border-radius: 10px !important;
+      color: #fff !important;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    :host ::ng-deep .login-btn .mdc-button__label {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      color: #fff !important;
-      border: none;
-      transition: all 0.3s ease;
     }
     .login-btn--admin { background: #1b3a7b !important; }
     .login-btn--admin:hover { background: #0d1b4a !important; }
@@ -354,6 +378,14 @@ import { LoginRequest } from '../../core/models/models';
       .login-left { display: none; }
       .login-right { flex: none; width: 100%; }
     }
+    @media (max-width: 480px) {
+      .login-right { padding: 24px 16px; }
+      .login-form-wrapper { max-width: 100%; }
+      .login-form-header h2 { font-size: 22px; }
+      .login-btn { height: 44px; font-size: 14px; }
+      :host ::ng-deep .role-toggle { padding: 10px 0 !important; font-size: 12px; }
+    }
+    :host ::ng-deep app-footer .footer { margin-top: 0; }
   `]
 })
 export class LoginComponent {
@@ -378,11 +410,22 @@ export class LoginComponent {
           if (role === 'Admin') this.router.navigate(['/admin/dashboard']);
           else if (role === 'Doctor') this.router.navigate(['/doctor/dashboard']);
           else this.router.navigate(['/patient/dashboard']);
+        } else {
+          this.errorMessage = res.message || 'Invalid email or password. Please try again.';
         }
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Invalid email or password. Please try again.';
+        const msg = err.error?.message || err.error?.title || '';
+        if (err.status === 401) {
+          this.errorMessage = msg || 'Invalid email or password. Please try again.';
+        } else if (err.status === 400) {
+          this.errorMessage = msg || 'Please fill in all required fields correctly.';
+        } else if (err.status === 0) {
+          this.errorMessage = 'Unable to connect to server. Please check your internet connection.';
+        } else {
+          this.errorMessage = msg || 'Login failed. Please try again.';
+        }
       }
     });
   }

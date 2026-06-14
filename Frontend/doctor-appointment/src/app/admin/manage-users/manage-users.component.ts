@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent, SidebarItem } from '../../shared/components/sidebar/sidebar.component';
 import { TopNavbarComponent } from '../../shared/components/top-navbar/top-navbar.component';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { AdminService } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
 import { User } from '../../core/models/models';
@@ -19,7 +20,7 @@ import { User } from '../../core/models/models';
   imports: [
     CommonModule, FormsModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatSnackBarModule,
-    SidebarComponent, TopNavbarComponent
+    SidebarComponent, TopNavbarComponent, FooterComponent
   ],
   template: `
     <div class="dashboard-layout">
@@ -102,13 +103,14 @@ import { User } from '../../core/models/models';
             </div>
           </div>
         </div>
+        <app-footer></app-footer>
       </div>
     </div>
   `,
   styles: [`
     .dashboard-layout { display: flex; min-height: 100vh; background: #f0f2f5; }
-    .dashboard-main { flex: 1; margin-left: 260px; }
-    .dashboard-content { padding: 88px 32px 32px; }
+    .dashboard-main { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+    .dashboard-content { padding: 88px 32px 32px; flex: 1; }
 
     .filters-bar {
       display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
@@ -166,6 +168,17 @@ import { User } from '../../core/models/models';
     .role--doctor { background: #e8f5e9; color: #2e7d32; }
     .role--patient { background: #ede7f6; color: #5b3a9e; }
     .empty-row { text-align: center; color: #aaa; padding: 40px 0 !important; }
+
+    @media (max-width: 1024px) { .dashboard-main { margin-left: 220px; } }
+    @media (max-width: 768px) {
+      .dashboard-main { margin-left: 0; }
+      .dashboard-content { padding: 72px 16px 24px; }
+      .stats-row { flex-direction: column; }
+      .filters-bar { flex-direction: column; align-items: stretch; }
+      .filter-field, .search-field { width: 100%; max-width: 100%; }
+      .table-card { padding: 12px; }
+      .custom-table th, .custom-table td { padding: 10px 8px; font-size: 12px; }
+    }
   `]
 })
 export class ManageUsersComponent implements OnInit {
