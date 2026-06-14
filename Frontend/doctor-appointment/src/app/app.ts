@@ -28,14 +28,15 @@ export class App implements OnInit, OnDestroy {
       }
     });
 
-    // Hide MedAI on admin and doctor routes
+    // Hide MedAI on admin, doctor, chat routes
     this.routerSub = this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd)
     ).subscribe(e => {
-      this.showMedAi = !e.urlAfterRedirects.startsWith('/admin') && !e.urlAfterRedirects.startsWith('/doctor');
+      const url = e.urlAfterRedirects;
+      this.showMedAi = !url.startsWith('/admin') && !url.startsWith('/doctor') && !url.includes('/chat');
     });
     // Initial check
-    this.showMedAi = !this.router.url.startsWith('/admin') && !this.router.url.startsWith('/doctor');
+    this.showMedAi = !this.router.url.startsWith('/admin') && !this.router.url.startsWith('/doctor') && !this.router.url.includes('/chat');
   }
 
   ngOnDestroy(): void {

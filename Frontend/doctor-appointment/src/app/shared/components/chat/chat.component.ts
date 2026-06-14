@@ -154,15 +154,9 @@ import { FooterComponent } from '../footer/footer.component';
                         <span>Appointment completed. Book a new one to continue.</span>
                       </div>
                     } @else {
-                      <button mat-icon-button class="attach-btn"><mat-icon>mood</mat-icon></button>
-                      <button mat-icon-button class="attach-btn"><mat-icon>attach_file</mat-icon></button>
                       <input type="text" class="message-input" placeholder="Type a message" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" [disabled]="sending">
                       <button mat-icon-button class="send-btn" [class.active]="newMessage.trim()" (click)="sendMessage()" [disabled]="!newMessage.trim() || sending">
-                        @if (newMessage.trim()) {
-                          <mat-icon>send</mat-icon>
-                        } @else {
-                          <mat-icon>mic</mat-icon>
-                        }
+                        <mat-icon>send</mat-icon>
                       </button>
                     }
                   </div>
@@ -285,13 +279,12 @@ import { FooterComponent } from '../footer/footer.component';
     .no-msg-card p { margin: 4px 0 0; font-size: 13px; color: #54656f; }
 
     /* Input Area */
-    .message-input-area { display: flex; align-items: center; gap: 4px; padding: 8px 12px; background: #f0f2f5; z-index: 1; position: relative; }
-    .attach-btn { color: #54656f; }
-    .message-input { flex: 1; border: none; outline: none; background: #fff; border-radius: 8px; padding: 9px 16px; font-size: 15px; color: #111b21; box-shadow: 0 1px 1px rgba(0,0,0,0.06); }
+    .message-input-area { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f0f2f5; z-index: 1; position: relative; flex-shrink: 0; }
+    .message-input { flex: 1; border: none; outline: none; background: #fff; border-radius: 8px; padding: 9px 16px; font-size: 15px; color: #111b21; box-shadow: 0 1px 1px rgba(0,0,0,0.06); min-width: 0; }
     .message-input::placeholder { color: #8696a0; }
-    .send-btn { color: #8696a0; transition: color 0.2s; }
+    .send-btn { color: #8696a0; transition: color 0.2s; flex-shrink: 0; }
     .send-btn.active { color: #00a884; }
-    .send-btn:disabled { color: #8696a0; }
+    .send-btn:disabled { color: #ccc; }
 
     .chat-completed-notice { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #ffeaa3; border-radius: 8px; color: #54656f; font-size: 13px; flex: 1; }
     .chat-completed-notice mat-icon { font-size: 18px; width: 18px; height: 18px; color: #8a6d3b; flex-shrink: 0; }
@@ -316,26 +309,25 @@ import { FooterComponent } from '../footer/footer.component';
     @media (max-width: 768px) {
       .dashboard-main { margin-left: 0; min-height: 100vh; }
       .dashboard-content { padding: 56px 0 0; }
-      .chat-container { flex: 1; }
-      .chat-layout { height: calc(100vh - 56px); position: relative; }
+      .chat-container { flex: 1; display: flex; flex-direction: column; }
+      .chat-layout { height: calc(100vh - 56px); overflow: hidden; }
 
-      /* Mobile: toggle contacts vs chat */
-      .chat-sidebar { position: absolute; inset: 0; width: 100%; z-index: 2; transition: transform 0.25s ease; }
-      .chat-main { position: absolute; inset: 0; z-index: 3; transform: translateX(100%); transition: transform 0.25s ease; }
-      .chat-layout.show-chat .chat-main { transform: translateX(0); }
-      .chat-layout.show-chat .chat-sidebar { transform: translateX(-100%); }
-      .chat-layout.show-contacts .chat-sidebar { transform: translateX(0); }
-      .chat-layout.show-contacts .chat-main { transform: translateX(100%); }
+      /* Mobile: show contacts or chat, not both */
+      .chat-sidebar { width: 100%; height: 100%; }
+      .chat-main { width: 100%; height: 100%; }
+      .chat-layout.show-chat .chat-sidebar { display: none; }
+      .chat-layout.show-contacts .chat-main { display: none; }
 
       .back-btn { display: inline-flex !important; }
       .chat-main__header { padding: 8px 10px; min-height: 48px; }
       .chat-user-avatar { width: 34px; height: 34px; font-size: 14px; }
       .chat-user-name { font-size: 14px; }
-      .messages-area { padding: 12px 14px; }
+      .messages-area { padding: 12px 14px; flex: 1; min-height: 0; }
       .message-bubble { max-width: 85%; }
       .message-text { font-size: 14px; padding-right: 44px; }
-      .message-input-area { padding: 6px 8px; }
-      .message-input { padding: 8px 12px; font-size: 14px; }
+      .message-input-area { padding: 8px 10px; gap: 8px; position: sticky; bottom: 0; }
+      .message-input { padding: 10px 14px; font-size: 15px; border-radius: 20px; }
+      .send-btn { width: 40px; height: 40px; }
       .encryption-notice { max-width: 90%; }
       .chat-empty { display: none; }
       .empty-features { flex-direction: column; gap: 12px; }
